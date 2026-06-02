@@ -17,7 +17,6 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 import {Typesetter} from './Typesetter.js';
 import {ItemList} from './ItemList.js';
 import * as TypesetterItemDirection from './TypesetterItemDirection.js';
@@ -31,14 +30,12 @@ import {OriginalText, SplitInSyllablesItem} from './MetadataKey.js';
 import * as ListType from './ListType.js';
 import * as LineType from './LineType.js';
 import * as GlueType from './GlueType.js';
-import {toFixedPrecision} from '../../toolbox/Util.js';
 import {FirstFitLineBreaker, ItemArrayWithBidiOrderInfo} from './LineBreaker/FirstFitLineBreaker.js';
 import {AddPageNumbers, AddPageNumbersOptions} from './PageProcessor/AddPageNumbers.js';
 import {AddLineNumbers, AddLineNumbersOptions} from './PageProcessor/AddLineNumbers.js';
-import {StringCounter} from '../../toolbox/StringCounter.js';
-import {trimPunctuation} from '../../defaults/Punctuation.js';
-import {MaxLineCount} from '../../Edition/EditionTypesettingHelper.js';
-import {LanguageDetector} from '../../toolbox/LanguageDetector.js';
+import {StringCounter} from './toolbox/StringCounter.js';
+import {trimPunctuation} from './Punctuation.js';
+import {LanguageDetector} from './toolbox/LanguageDetector.js';
 import {BidiDisplayOrder, IntrinsicTextDirection} from './Bidi/BidiDisplayOrder.js';
 import {AdjustmentRatio} from './AdjustmentRatio.js';
 import {MinusInfinitePenalty, Penalty} from './Penalty.js';
@@ -47,10 +44,10 @@ import {AddMarginalia, AddMarginaliaOptions} from './PageProcessor/AddMarginalia
 import {TypesetterItem} from "./TypesetterItem.js";
 import {PageProcessor} from "./PageProcessor/PageProcessor.js";
 import {BidiOrderInfo} from "./Bidi/BidiOrderInfo.js";
-import {ApparatusInterface} from "../../Edition/EditionInterface.js";
 import {compactItemArray} from "./Compactor/CompactItemArray.js";
 import {hyphenateTextBoxes} from "./Hyphenator/HyphenateTextBoxes.js";
 import {HyphenationLanguage} from "./Hyphenator/Hyphenator.js";
+import {toFixedPrecision} from "./toolbox/Util";
 
 const signature = 'BasicTypesetter 1.0';
 
@@ -67,6 +64,7 @@ const DefaultFontSize = Typesetter.pt2px(12);
 const MaxLinesToLookAhead = 30;
 const InfiniteVerticalBadness = 100000000;
 
+const MaxLineCount = 10000;
 
 interface BestPage {
   firstLine: number,
@@ -82,8 +80,8 @@ interface LineRangeData {
   penalty: number;
 }
 
-interface BasicTypesetterExtraData {
-  apparatuses?: ApparatusInterface[];
+interface BasicTypesetterExtraData<ApparatusType> {
+  apparatuses?: ApparatusType[];
 }
 
 export interface Marginalia {
@@ -91,7 +89,7 @@ export interface Marginalia {
   marginalSubEntries: TypesetterItem[][];
 }
 
-export interface BasicTypesetterOptions {
+export interface BasicTypesetterOptions<ApparatusType> {
   pageWidth: number;
   pageHeight: number;
   marginTop?: number;
@@ -113,11 +111,11 @@ export interface BasicTypesetterOptions {
   textBoxMeasurer: TextBoxMeasurer;
   /**
    * A function to typeset an apparatus for the given line range.
-   * It must return a Promise to a horizontal ItemList that to typeset and add at the end of the page
+   * It must return a Promise to a horizontal ItemList to typeset and add at the end of the page
    */
-  getApparatusListToTypeset?: (mainTextVerticalList: ItemList, apparatus: ApparatusInterface, lineFrom: number, lineTo: number, resetFirstLine: boolean) => Promise<ItemList>;
+  getApparatusListToTypeset?: (mainTextVerticalList: ItemList, apparatus: ApparatusType, lineFrom: number, lineTo: number, resetFirstLine: boolean) => Promise<ItemList>;
   getMarginaliaForLineRange?: (lineFrom: number, lineTo: number) => Marginalia[];
-  preTypesetApparatuses?: (apparatuses: ApparatusInterface[]) => Promise<boolean>;
+  preTypesetApparatuses?: (apparatuses: ApparatusType[]) => Promise<boolean>;
   textToApparatusGlue?: {
     height: number, shrink: number, stretch: number
   };
@@ -128,8 +126,8 @@ export interface BasicTypesetterOptions {
   debug?: boolean;
 }
 
-export class BasicTypesetter extends Typesetter {
-  private options: Required<BasicTypesetterOptions>;
+export class BasicTypesetter<ApparatusType> extends Typesetter {
+  private options: Required<BasicTypesetterOptions<ApparatusType>>;
   private readonly lineWidth: number;
   private readonly textAreaHeight: number;
   private lineSkip: number;
@@ -137,7 +135,7 @@ export class BasicTypesetter extends Typesetter {
   private debug: boolean;
   private pageOutputProcessors: PageProcessor[] = [];
 
-  constructor(options: BasicTypesetterOptions) {
+  constructor(options: BasicTypesetterOptions<ApparatusType>) {
     super();
 
     const defaults = {
@@ -164,7 +162,7 @@ export class BasicTypesetter extends Typesetter {
       getMarginaliaForLineRange: (_lineFrom: number, _lineTo: number): Marginalia[] => {
         return [];
       },
-      preTypesetApparatuses: async (_apparatuses: ApparatusInterface[]) => {
+      preTypesetApparatuses: async (_apparatuses: ApparatusType[]) => {
         return true;
       },
       textToApparatusGlue: {height: DefaultFontSize, shrink: DefaultFontSize * 0.1, stretch: Typesetter.cm2px(50)},
@@ -445,7 +443,7 @@ export class BasicTypesetter extends Typesetter {
    * when needed.
    *
    */
-  async typeset(mainTextList: ItemList, extraData: BasicTypesetterExtraData = {}): Promise<TypesetterDocument> {
+  async typeset(mainTextList: ItemList, extraData: BasicTypesetterExtraData<ApparatusType> = {}): Promise<TypesetterDocument> {
     if (mainTextList.getDirection() !== TypesetterItemDirection.VerticalItemDirection) {
       throw new Error(`Cannot typeset a non-vertical list`);
     }
@@ -490,7 +488,7 @@ export class BasicTypesetter extends Typesetter {
       // any other item type is ignored
       console.warn(`Ignoring non-supported item while building main text vertical list`, mainTextListItem);
     }
-    // set any inter line glue that still unset, normally, inter line glue between paragraphs
+    // set any inter-line glue that still not set, normally, inter-line glue between paragraphs
     mainTextVerticalList = this.setUnsetInterLineGlue(mainTextVerticalList);
     // add absolute line numbers metadata to text lines
     mainTextVerticalList = this.addAbsoluteLineNumberMetadata(mainTextVerticalList);
@@ -826,7 +824,7 @@ export class BasicTypesetter extends Typesetter {
   getItemIntrinsicTextDirection(item: TypesetterItem): IntrinsicTextDirection {
     if (item instanceof TextBox) {
       if (item.getTextDirection() === '') {
-        // text direction not set, let's calculate it!
+        // text direction is not set yet, let's calculate it!
         let ld = new LanguageDetector('la');
         return ld.detectTextDirection(item.getText());
       } else {

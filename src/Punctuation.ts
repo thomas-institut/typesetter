@@ -1,0 +1,361 @@
+// noinspection ES6PreferShortImport
+
+/*
+ *  Copyright (C) 2021 Universität zu Köln
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+import { trimCharacters } from './toolbox/Util.js'
+
+
+// NOTE: if not explicitly set, isPunctuationInsideWord is true
+// such punctuation signs effectively split the words
+
+const punctuationDefinition = [
+  { char: '.', // period
+    default: {
+      isPunctuation: true,
+      isPunctuationInsideWord: false, // should be irrelevant, periods inside a word should be handled by a parser
+      sticksToPrevious: true,
+      sticksToNext: false }
+  },
+  { char: ',',  // comma
+    default: {
+      isPunctuation: true,
+      isPunctuationInsideWord: false,  // to allow for decimal comma (but, a parser is needed to properly support it)
+      sticksToPrevious: true,
+      sticksToNext: false }
+  },
+  { char: String.fromCodePoint(0x60C), // Arabic comma
+    default: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: ';', // semi-colon
+    default: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: String.fromCodePoint(0x61B), // Arabic semi-colon
+    default: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: ':', // colon
+    default: {
+      isPunctuation: true,
+      isPunctuationInsideWord: false,  // to allow for ratios, e.g, 3:2, A:B
+      sticksToPrevious: true,
+      sticksToNext: false }
+  },
+  { char: '¿', // starting question mark
+    default: { isPunctuation: true, sticksToPrevious: false, sticksToNext: true }
+  },
+  { char: '?', // question mark
+    default: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: String.fromCodePoint(0x61F), // Arabic question mark
+    default: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: '¡', // starting exclamation mark
+    default: { isPunctuation: true, sticksToPrevious: false, sticksToNext: true }
+  },
+  { char: '!', // exclamation mark
+    default: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: '⊙', // circled period
+    default: { isPunctuation: true, sticksToPrevious: false, sticksToNext: false }
+  },
+  { char: '¶', // paragraph
+    default: { isPunctuation: true, sticksToPrevious: false, sticksToNext: false }
+  },
+  {
+    char: '|',
+    default: {isPunctuation: true, sticksToPrevious: false, sticksToNext: false}
+  },
+  {
+    char: '¦',
+    default: {isPunctuation: true, sticksToPrevious: false, sticksToNext: false}
+  },
+  {
+    char: '‖',
+    default: {isPunctuation: true, sticksToPrevious: false, sticksToNext: false}
+  },
+
+  // The hyphen is taken to be a normal character, it should not be in this list
+  // if it were to be ignored inside words, it has to be handled by a normalizer
+  // { char:  '-', // hyphen
+  //   default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: true, sticksToNext: true }
+  // },
+  { char:  String.fromCodePoint(0x05be), // maqaf = Hebrew top hyphen
+    default: { isPunctuation: true, sticksToPrevious: true, sticksToNext: true }
+  },
+  { char:  String.fromCodePoint(0x2013), // en dash
+    default: { isPunctuation: true, sticksToPrevious: false, sticksToNext: false }
+  },
+  { char:  String.fromCodePoint(0x2014), // em dash
+    default: { isPunctuation: true, sticksToPrevious: false, sticksToNext: false }
+  },
+  { char:  String.fromCodePoint(0x2e3a), // two-em dash
+    default: { isPunctuation: true, sticksToPrevious: false, sticksToNext: false }
+  },
+  { char: '<', // left angle bracket
+    default: { isPunctuation: true, sticksToPrevious: false, sticksToNext: true }
+  },
+  { char: '>', // right angle bracket
+    default: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: '«', // start guillemet   (i.e., left-pointing guillemet in Latin, right-pointing guillemet in Hebrew/Arabic
+    default: { isPunctuation: true, sticksToPrevious: false, sticksToNext: true }
+  },
+  { char: '»', // end guillemet
+    default: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: '[', // start square bracket
+    default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: false, sticksToNext: true }
+  },
+  { char: ']', // end square bracket
+    default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: '(', // start round bracket
+    default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: false, sticksToNext: true }
+  },
+  { char: ')', // end round bracket
+    default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: '{', // start curly bracket
+    default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: false, sticksToNext: true }
+  },
+  { char: '}', // end curly bracket
+    default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: '〈', // start angle bracket (U+2329)
+    default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: false, sticksToNext: true }
+  },
+  { char: '〉', // end angle bracket (U+232A)
+    default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: '〈', // start angle bracket (U+3008)
+    default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: false, sticksToNext: true }
+  },
+  { char: '〉', // end angle bracket (U+3009)
+    default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: '⟨', // start angle bracket (U+27E8)
+    default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: false, sticksToNext: true }
+  },
+  { char: '⟩', // end angle bracket (U+27E9)
+    default: { isPunctuation: true, isPunctuationInsideWord: false, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char: '"', // straight double quote
+    default: {
+      isPunctuation: false,  // Editors MUST use proper left/right quotation mark characters
+      sticksToPrevious: false,
+      sticksToNext: false
+    }
+  },
+  { char: '“', // left double quotation mark
+    default: { isPunctuation: true, sticksToPrevious: false, sticksToNext: true },
+    ar: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false }, // in LTR languages it should be inverted
+    he: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false },
+  },
+  { char: '”', // right double quotation mark
+    default: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false },
+    ar: { isPunctuation: true, sticksToPrevious: false, sticksToNext: true }, // in LTR languages it should be inverted
+    he: { isPunctuation: true, sticksToPrevious: false, sticksToNext: true },
+  },
+  { char: "'", // straight single quotation mark, apostrophe
+    default: {
+      isPunctuation: false,  // Editors MUST use proper left/right quotation mark characters
+      sticksToPrevious: false,
+      sticksToNext: false
+    },
+  },
+  { char: '‘', // left single quotation mark
+    default: {
+      isPunctuation: true,
+      isPunctuationInsideWord: false,
+      sticksToPrevious: false,
+      sticksToNext: true
+    },
+    ar: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false }, // in LTR languages it should be inverted
+    he: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false },
+  },
+  { char: '’', // right single quotation mark, fancy apostrophe
+    default: {
+      isPunctuation: true,
+      isPunctuationInsideWord: false,
+      sticksToPrevious: true,
+      sticksToNext: false
+    },
+    ar: {
+      isPunctuation: true,
+      isPunctuationInsideWord: false,
+      sticksToPrevious: false,  // in LTR languages it should be inverted
+      sticksToNext: true
+    },
+    he: {
+      isPunctuation: true,
+      isPunctuationInsideWord: false,
+      sticksToPrevious: false,  // in LTR languages it should be inverted
+      sticksToNext: true
+    },
+  },
+  { char:  String.fromCodePoint(0x60D), // Arabic date separator
+    default: { isPunctuation: true, sticksToPrevious: false, sticksToNext: false }
+  },
+  { char:  String.fromCodePoint(0x5C0), // Hebrew paseq (Hebrew vertical bar)
+    default: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false }
+  },
+  { char:  String.fromCodePoint(0x5C3), // Hebrew soft pasuq (end of verse)
+    default: { isPunctuation: true, sticksToPrevious: true, sticksToNext: false }
+  },
+]
+
+
+export class Punctuation {
+
+  /**
+   * Returns true if the given string is entirely composed
+   * of punctuation characters in the given language
+   * @param theString
+   * @param lang
+   * @return boolean
+   */
+  static stringIsAllPunctuation(theString: string, lang = ''): boolean{
+    for (let i = 0; i < theString.length; i++) {
+      if (!this.characterIsPunctuation(theString.charAt(i), lang)) {
+        return false
+      }
+    }
+    return true
+  }
+
+  /**
+   *
+   * @param {string}char
+   * @param lang
+   * @param insideWord
+   * @return {boolean}
+   */
+  static characterIsPunctuation(char: string, lang = '', insideWord = false): boolean {
+    let definitionObjectArray = getPunctuationDefinition(lang).filter( (def: any) => { return def['char'] === char})
+    if (definitionObjectArray.length === 0) {
+      return false
+    }
+    return insideWord ? definitionObjectArray[0]['def']['isPunctuationInsideWord'] : definitionObjectArray[0]['def']['isPunctuation']
+  }
+
+  /**
+   * Returns true if the given string has at least one character
+   * that is punctuation in the given language.
+   *
+   * This function takes into account peculiarities of each language.
+   * For example, in Hebrew, a straight double quotation inside a
+   * word does not count as punctuation.
+   *
+   * @param theString
+   * @param lang
+   */
+  static stringHasPunctuation(theString: string, lang = '') {
+    for (let i = 0; i < theString.length; i++) {
+      let char = theString.charAt(i)
+      let insideWord = i > 0 && i < theString.length-1
+      // console.log(`Processing character ${i}: '${char}', insideWord=${insideWord}`)
+      if (this.characterIsPunctuation(char, lang, insideWord)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   *
+   * @param {string}char
+   * @param {string}lang
+   * @return {boolean}
+   */
+  static sticksToPrevious(char: string, lang: string): boolean {
+    let definitionObjectArray = getPunctuationDefinition(lang).filter( (def: any) => { return def['char'] === char})
+    if (definitionObjectArray.length === 0) {
+      return false
+    }
+    return definitionObjectArray[0]['def']['sticksToPrevious']
+  }
+
+  /**
+   *
+   * @param {string}char
+   * @param {string}lang
+   * @return {boolean}
+   */
+  static sticksToNext(char: string, lang: string): boolean {
+    let definitionObjectArray = getPunctuationDefinition(lang).filter( (def: any) => { return def['char'] === char})
+    if (definitionObjectArray.length === 0) {
+      return false
+    }
+    return definitionObjectArray[0]['def']['sticksToNext']
+  }
+
+}
+
+let punctuationDefinitionsPerLanguage: any = {}
+const defaultLangKey = 'default'
+
+function getPunctuationDefinition(lang = '') {
+  let langKey = lang === '' ? defaultLangKey : lang
+
+  if (punctuationDefinitionsPerLanguage[langKey] !== undefined) {
+    // return cached definitions object
+    return punctuationDefinitionsPerLanguage[langKey]
+  }
+  punctuationDefinitionsPerLanguage[langKey] = buildPunctuationDefinitionForLanguage(lang)
+  return punctuationDefinitionsPerLanguage[langKey]
+}
+
+function buildPunctuationDefinitionForLanguage(lang: string) {
+  return punctuationDefinition.map( (def: any) => {
+    let charDef
+    if (def[lang] !== undefined) {
+        charDef = def[lang]
+    } else {
+      charDef = def['default']
+    }
+    if (charDef['isPunctuationInsideWord'] === undefined) {
+      charDef['isPunctuationInsideWord'] = charDef['isPunctuation']
+    }
+    return { char: def['char'], def: charDef}
+  })
+}
+
+/**
+ * 
+ * @param lang
+ * @return {(string)[]}
+ */
+export function getPunctuationCharactersForLang(lang = ''): string[] {
+  return punctuationDefinition.filter ( (def: any) => {
+    if (def[lang] !== undefined) {
+      return def[lang].isPunctuation
+    }
+    return def.default.isPunctuation
+  }).map ( (def) => { return def.char})
+}
+
+
+/**
+ *
+ * @param {string}someString
+ * @param {string}lang
+ */
+export function trimPunctuation(someString: string, lang: string = '') {
+  return trimCharacters(someString, getPunctuationCharactersForLang(lang))
+}
+
