@@ -16,7 +16,7 @@
  *
  */
 
-import {TextBox} from "../TextBox.js";
+import {TextBox} from "@/TextBox";
 
 export class TextBoxMeasurer {
 

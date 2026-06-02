@@ -319,7 +319,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
 
       // adjust horizontal glue  (i.e., justify the text within the line)
       let adjRatio = AdjustmentRatio.calculateHorizontalAdjustmentRatio(line.getList(), this.lineWidth);
-      line.addMetadata(MetadataKey.AdjustmentRatio, adjRatio);
+      line.addMetadata(MetadataKey.MDK_AdjustmentRatio, adjRatio);
       let unadjustedLineWidth = line.getWidth();
       line.addMetadata(MetadataKey.UnadjustedLineWidth, toFixedPrecision(unadjustedLineWidth, 3));
       if (adjRatio !== null) {
@@ -782,7 +782,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
 
     let marginalia = this.options.getMarginaliaForLineRange(firstLine, lastLine);
     // console.log(`Marginalia ${firstLine} to ${lastLine}: ${marginalia}`)
-    page.addMetadata(MetadataKey.PageMarginalia, marginalia);
+    page.addMetadata(MetadataKey.MDK_PageMarginalia, marginalia);
     return [page];
   }
 

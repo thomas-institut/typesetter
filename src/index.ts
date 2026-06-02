@@ -23,7 +23,6 @@ export * from './TypesetterItem.js';
 export * from './TypesetterItemDirection.js';
 export * from './TypesetterObject.js';
 export * from './TypesetterPage.js';
-
 export * from './LineBreaker/index.js';
 export * from './Renderer/index.js';
 export * from './PageProcessor/index.js';

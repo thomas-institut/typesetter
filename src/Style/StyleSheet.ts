@@ -21,7 +21,7 @@
 import {Glue} from '../Glue.js';
 import {TextBox} from '../TextBox.js';
 import {Dimension} from '../Dimension.js';
-import {deepGetValuesForKey} from '../../../toolbox/ObjectUtil.js';
+import {deepGetValuesForKey} from '@/toolbox/ObjectUtil';
 
 const categories = ['strings', 'page', 'paragraph', 'text', 'glue'];
 

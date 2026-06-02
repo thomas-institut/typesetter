@@ -63,6 +63,14 @@ export function isNumeric(someString: string): boolean {
   return (/^[0-9]/.test(someString));
 }
 
+export function isAllUpperCase(str: string): boolean {
+  return str === str.toUpperCase();
+}
+
+export function deepCopy<T>(someVariable: T): T {
+  return JSON.parse(JSON.stringify(someVariable));
+}
+
 
 
 

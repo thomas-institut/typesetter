@@ -19,7 +19,7 @@
  */
 
 import {TextBox} from './TextBox.js';
-import {deepCopy} from "../../toolbox/Util.js";
+import {deepCopy} from "@/toolbox/Util.js";
 
 
 export interface FontDefinition {

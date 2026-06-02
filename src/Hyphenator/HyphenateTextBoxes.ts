@@ -6,7 +6,7 @@ import {BidiOrderInfo} from "../Bidi/BidiOrderInfo.js";
 import {TextBox} from "../TextBox.js";
 import {hyphenate, HyphenationLanguage} from "../Hyphenator/Hyphenator.js";
 import {TextBoxFactory} from "../TextBoxFactory.js";
-import {deepCopy} from "../../../toolbox/Util.js";
+import {deepCopy} from "@/toolbox/Util.js";
 import * as MetadataKey from '../MetadataKey.js';
 import {GoodPointForBreak, Penalty} from "../Penalty.js";
 import {ObjectFactory} from "../ObjectFactory.js";

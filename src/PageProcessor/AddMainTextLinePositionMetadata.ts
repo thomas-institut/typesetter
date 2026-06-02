@@ -70,7 +70,7 @@ export class AddMainTextLinePositionMetadata extends PageProcessor {
     }).indexOf(ListType.MainTextBlockList);
     if (mainTextIndex === -1) {
       // no main text block, nothing to do
-      page.addMetadata(MetadataKey.MainTextLineData, {mainTextListIndex: -1, lineData: {}});
+      page.addMetadata(MetadataKey.MDK_MainTextLineData, {mainTextListIndex: -1, lineData: {}});
       return page;
     }
 
@@ -119,7 +119,7 @@ export class AddMainTextLinePositionMetadata extends PageProcessor {
           listIndex: index, lineNumber: lineNumber, y: yPositions[index]
         });
       });
-      page.addMetadata(MetadataKey.MainTextLineData, {mainTextListIndex: mainTextIndex, lineData: data});
+      page.addMetadata(MetadataKey.MDK_MainTextLineData, {mainTextListIndex: mainTextIndex, lineData: data});
     }
     return page;
   }

@@ -1,9 +1,8 @@
-// noinspection ES6PreferShortImport
 
 import {ItemList} from './ItemList.js';
 import {TextBox} from './TextBox.js';
-import {LanguageDetector} from '../../toolbox/LanguageDetector.js';
-import {FontConversionDefinition} from "./Style/StyleSheet.js";
+import {LanguageDetector} from '@/toolbox/LanguageDetector.js';
+import {FontConversionDefinition} from "@/Style";
 
 
 export class FontConversions {

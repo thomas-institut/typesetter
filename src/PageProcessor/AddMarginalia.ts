@@ -67,24 +67,24 @@ export class AddMarginalia extends PageProcessor {
     return new Promise(async (resolve) => {
 
       this.debug = false;
-      if (!page.hasMetadata(MetadataKey.PageMarginalia)) {
+      if (!page.hasMetadata(MetadataKey.MDK_PageMarginalia)) {
         resolve(page);
         return;
       }
-      let pageMarginalia: PageMarginalia[] = page.getMetadata(MetadataKey.PageMarginalia) as PageMarginalia[];
+      let pageMarginalia: PageMarginalia[] = page.getMetadata(MetadataKey.MDK_PageMarginalia) as PageMarginalia[];
       // console.log(`Page marginalia`, pageMarginalia);
       if (pageMarginalia.length === 0) {
         resolve(page);
         return;
       }
       this.debug && console.log(`Page marginalia`, pageMarginalia);
-      if (!page.hasMetadata(MetadataKey.MainTextLineData)) {
+      if (!page.hasMetadata(MetadataKey.MDK_MainTextLineData)) {
         console.warn(`No main text line data available, marginalia not added`);
         resolve(page);
         return;
       }
       this.debug && console.log(`Processing marginalia for page ${page.getMetadata(MetadataKey.PageNumber)}`);
-      let mainTextLineData: MainTextLineData = page.getMetadata(MetadataKey.MainTextLineData) as MainTextLineData;
+      let mainTextLineData: MainTextLineData = page.getMetadata(MetadataKey.MDK_MainTextLineData) as MainTextLineData;
       let mainTextIndex = mainTextLineData.mainTextListIndex;
       if (mainTextIndex === -1) {
         // no main text block, nothing to do

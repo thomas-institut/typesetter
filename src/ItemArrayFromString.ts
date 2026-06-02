@@ -1,6 +1,6 @@
 import {TypesetterItem} from "./TypesetterItem.js";
-import {TextBoxFactory} from "@/lib/Typesetter/TextBoxFactory";
-import {Glue} from "@/lib/Typesetter/Glue";
+import {TextBoxFactory} from "@/TextBoxFactory";
+import {Glue} from "@/Glue";
 
 
 /**

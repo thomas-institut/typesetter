@@ -4,7 +4,7 @@ import {PageProcessor} from './PageProcessor.js';
 import * as MetadataKey from '../MetadataKey.js';
 import {TextBoxFactory} from '../TextBoxFactory.js';
 import {TextBoxMeasurer} from '../TextBoxMeasurer/TextBoxMeasurer.js';
-import {NumeralSystem, NumeralSystems} from '../../../toolbox/NumeralSystems.js';
+import {NumeralSystem, NumeralSystems} from '@/toolbox/NumeralSystems.js';
 import {TypesetterPage} from "../TypesetterPage.js";
 
 

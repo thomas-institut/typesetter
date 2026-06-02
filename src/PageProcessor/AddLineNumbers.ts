@@ -1,18 +1,16 @@
-// noinspection ES6PreferShortImport
-
 import {PageProcessor} from './PageProcessor.js';
 import * as MetadataKey from '../MetadataKey.js';
 import * as ListType from '../ListType.js';
-import {ItemList} from '../ItemList.js';
+import {ItemList} from '@/ItemList';
 import * as TypesetterItemDirection from '../TypesetterItemDirection.js';
-import {TextBoxFactory} from '../TextBoxFactory.js';
-import {Glue} from '../Glue.js';
-import {TextBoxMeasurer} from '../TextBoxMeasurer/TextBoxMeasurer.js';
-import {Typesetter} from '../Typesetter.js';
-import {deepCopy} from '../../../toolbox/Util.js';
-import {TypesetterPage} from "../TypesetterPage.js";
-import {LineNumberData, MainTextLineData} from "../MainTextLineData.js";
-import {NumeralSystem, NumeralSystems} from "../../../toolbox/NumeralSystems.js";
+import {TextBoxFactory} from '@/TextBoxFactory';
+import {Glue} from '@/Glue';
+import {TextBoxMeasurer} from '@/TextBoxMeasurer';
+import {Typesetter} from '@/Typesetter';
+import {deepCopy} from '@/toolbox/Util.js';
+import {TypesetterPage} from "@/TypesetterPage";
+import {LineNumberData, MainTextLineData} from "@/MainTextLineData";
+import {NumeralSystem, NumeralSystems} from "@/toolbox/NumeralSystems.js";
 
 export interface AddLineNumbersOptions {
   listTypeToNumber?: string,
@@ -70,13 +68,13 @@ export class AddLineNumbers extends PageProcessor {
    */
   process(page: TypesetterPage): Promise<TypesetterPage> {
     return new Promise(async (resolve) => {
-      if (!page.hasMetadata(MetadataKey.MainTextLineData)) {
+      if (!page.hasMetadata(MetadataKey.MDK_MainTextLineData)) {
         console.warn(`No main text line data available, line numbers not added`);
         resolve(page);
       }
 
       /** @var {MainTextLineData}mainTextLineData */
-      let mainTextLineData = page.getMetadata(MetadataKey.MainTextLineData) as MainTextLineData;
+      let mainTextLineData = page.getMetadata(MetadataKey.MDK_MainTextLineData) as MainTextLineData;
       let mainTextIndex = mainTextLineData.mainTextListIndex;
       if (mainTextIndex === -1) {
         // no main text block, nothing to do
