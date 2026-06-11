@@ -18,16 +18,16 @@
 
 import {PageProcessor} from './PageProcessor.js';
 import * as MetadataKey from '../MetadataKey.js';
-import {ItemList} from '../ItemList.js';
+import {ItemList} from '@/ItemList';
 import * as TypesetterItemDirection from '../TypesetterItemDirection.js';
 import * as ListType from '../ListType.js';
-import {TextBoxMeasurer} from '../TextBoxMeasurer/TextBoxMeasurer.js';
-import {Glue} from '../Glue.js';
-import {ItemArray} from '../ItemArray.js';
-import {TypesetterPage} from "../TypesetterPage.js";
-import {PageMarginalia} from "../PageMarginalia";
-import {MainTextLineData} from "../MainTextLineData";
-import {TypesetterItem} from "../TypesetterItem.js";
+import {TextBoxMeasurer} from '@/TextBoxMeasurer';
+import {Glue} from '@/Glue';
+import {ItemArray} from '@/ItemArray';
+import {TypesetterPage} from "@/TypesetterPage";
+import {PageMarginalia} from "@/PageMarginalia";
+import {MainTextLineData} from "@/MainTextLineData";
+import {TypesetterItem} from "@/TypesetterItem";
 
 
 export type MarginaliaAlignDirection = 'right' | 'left';

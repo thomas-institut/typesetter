@@ -62,7 +62,7 @@ export class AddLineNumbers extends PageProcessor {
    * The main text is the vertical list identified with the 'type' metadata key set to 'MainText'
    * Each horizontal list that has the 'type' metadata set with 'line' and has
    * a 'lineNumber' metadata key set will be considered. A line number may be added so that it will print at
-   * the same Y position of the line. Line numbers will be added at frequency given in the options.
+   * the same Y position of the line. Line numbers will be added at the frequency given in the options.
    * @param {TypesetterPage} page
    * @return {Promise<TypesetterPage>}
    */
@@ -126,7 +126,7 @@ export class AddLineNumbers extends PageProcessor {
       for (let i = 0; i < lineNumberData.length; i++) {
         let dataItem = lineNumberData[i];
 
-        // add inter number glue
+        // add inter-number glue
         let glueHeight = dataItem.y - previousY - previousLineHeight + previousShiftYAdjustment;
         if (glueHeight !== 0) {
           let glue = new Glue(TypesetterItemDirection.VerticalItemDirection);

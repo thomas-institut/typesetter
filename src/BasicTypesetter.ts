@@ -26,7 +26,7 @@ import {TypesetterPage} from './TypesetterPage.js';
 import {TextBoxMeasurer} from './TextBoxMeasurer/TextBoxMeasurer.js';
 import {TypesetterDocument} from './TypesetterDocument.js';
 import * as MetadataKey from './MetadataKey.js';
-import {OriginalText, SplitInSyllablesItem} from './MetadataKey.js';
+import {OriginalText, SplitInSyllablesItem, SyllableIndex} from './MetadataKey.js';
 import * as ListType from './ListType.js';
 import * as LineType from './LineType.js';
 import * as GlueType from './GlueType.js';
@@ -108,6 +108,7 @@ export interface BasicTypesetterOptions<ApparatusType> {
   marginaliaOptions?: AddMarginaliaOptions;
   apparatusesAtEndOfDocument?: boolean;
   hyphenationLanguages?: HyphenationLanguage [];
+  hyphenationManualEntries?: string[];
   textBoxMeasurer: TextBoxMeasurer;
   /**
    * A function to typeset an apparatus for the given line range.
@@ -170,6 +171,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
       justify: true,
       debug: false,
       hyphenationLanguages: [],
+      hyphenationManualEntries: [],
     };
 
     this.options = {...defaults, ...options};
@@ -268,7 +270,8 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
     // console.log(`Horizontal list to typeset`, itemArrayWithBidiOrderInfo);
     // hyphenate compact the item array taking into account bidirectional text order
     let hyphenated = hyphenateTextBoxes({
-      itemArrayWithBidiInfo: itemArrayWithBidiOrderInfo, hyphenationLanguages: this.options.hyphenationLanguages
+      itemArrayWithBidiInfo: itemArrayWithBidiOrderInfo, hyphenationLanguages: this.options.hyphenationLanguages,
+      manualEntries: this.options.hyphenationManualEntries
     });
     // console.log(`Hyphenated`, hyphenated);
 
@@ -1083,7 +1086,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
         let text: string | null = null;
         const splitInSyllables = item.getMetadata(SplitInSyllablesItem) as boolean ?? false;
         if (splitInSyllables) {
-          const syllableIndex = item.getMetadata(SplitInSyllablesItem) as number;
+          const syllableIndex = item.getMetadata(SyllableIndex) as number;
           if (syllableIndex === 0) {
             if (!item.hasMetadata(OriginalText)) {
               throw new Error(`Original text not set for item ${syllableIndex} in line ${line.getMetadata(MetadataKey.LineNumber)}`);
@@ -1113,9 +1116,9 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
         }
         const splitInSyllables = item.getMetadata(SplitInSyllablesItem) as boolean ?? false;
         if (splitInSyllables) {
-          const syllableIndex = item.getMetadata(SplitInSyllablesItem) as number;
+          const syllableIndex = item.getMetadata(SyllableIndex) as number;
           if (syllableIndex === 0) {
-            item.addMetadata(MetadataKey.TokenOccurrenceInLine, occurrencesCounter.getCount(token));
+            item.addMetadata(MetadataKey.TokenTotalOccurrencesInLine, occurrencesCounter.getCount(token));
           }
         } else {
           item.addMetadata(MetadataKey.TokenTotalOccurrencesInLine, occurrencesCounter.getCount(token));
