@@ -1,7 +1,7 @@
 import {describe, expect, it} from "vitest";
 import {hyphenateTextBoxes} from "@/Hyphenator/HyphenateTextBoxes";
 import {createItemArrayFromString} from "@/ItemArrayFromString";
-import {getFakeBidiOrder, getFakeItemArrayWithBidiInfoFromString} from "./FakeStringTextDirection";
+import {getFakeBidiOrder, getFakeItemArrayWithBidiInfoFromString} from "../FakeStringTextDirection";
 import {TextBox} from "@/TextBox";
 import {Penalty} from "@/Penalty";
 import {TextBoxFactory} from "@/TextBoxFactory";

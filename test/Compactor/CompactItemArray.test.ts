@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {getFakeBidiOrder} from "./FakeStringTextDirection";
+import {getFakeBidiOrder} from "../FakeStringTextDirection";
 import {compactItemArray} from "@/Compactor/CompactItemArray";
 import {TextBox} from "@/TextBox";
 import {MergedItem, SourceItems} from "@/MetadataKey";

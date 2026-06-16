@@ -1,7 +1,7 @@
 import {BidiDisplayOrder, IntrinsicTextDirection} from '@/Bidi/BidiDisplayOrder'
 import { describe, test, expect } from 'vitest'
 import {BidiOrderInfo} from "@/Bidi/BidiOrderInfo";
-import {getFakeStringTextDirection} from "./FakeStringTextDirection";
+import {getFakeStringTextDirection} from "../FakeStringTextDirection";
 
 
 interface TestCase {
