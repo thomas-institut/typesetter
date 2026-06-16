@@ -3,6 +3,9 @@ import {hyphenateTextBoxes} from "@/Hyphenator/HyphenateTextBoxes";
 import {createItemArrayFromString} from "@/ItemArrayFromString";
 import {getFakeBidiOrder, getFakeItemArrayWithBidiInfoFromString} from "./FakeStringTextDirection";
 import {TextBox} from "@/TextBox";
+import {Penalty} from "@/Penalty";
+import {TextBoxFactory} from "@/TextBoxFactory";
+import * as MetadataKey from "@/MetadataKey";
 import {ItemArrayWithBidiOrderInfo} from "@/LineBreaker/FirstFitLineBreaker";
 import {Glue} from "@/Glue";
 import {isAllUpperCase} from "@/toolbox/Util";
@@ -142,6 +145,44 @@ describe('HyphenateTextBoxes', () => {
     expect(itemArrayWithBidiOrderInfoToString(result))
     .toEqual('Latin and Eng-lish mixed Do-mi-nus THREE TWO ONE and res with-out Glo-ria');
   })
+
+  it('should ensure the item to insert in hyphen penalties matches the format of the text boxes', () => {
+    const originalTextBox = TextBoxFactory.simpleText('hyphenation', {
+      fontFamily: 'CustomFont',
+      fontSize: 42,
+      fontWeight: 'bold',
+      fontStyle: 'italic'
+    });
+    originalTextBox.setHyphenation('custom');
+
+    const itemArray = [originalTextBox];
+    const bidiOrderInfoArray = getFakeBidiOrder(itemArray, 'ltr');
+
+    const result = hyphenateTextBoxes({
+      itemArrayWithBidiInfo: {itemArray, bidiOrderInfoArray},
+      hyphenationLanguages: ['custom'],
+      manualEntries: ['hy-phen-a-tion']
+    });
+
+    // Check that we have penalties and they have the correct itemToInsert
+    const penalties = result.itemArray.filter(item => item instanceof Penalty) as Penalty[];
+    expect(penalties.length).toBeGreaterThan(0);
+
+    penalties.forEach(penalty => {
+      const itemToInsert = penalty.getItemToInsert();
+      expect(itemToInsert).toBeInstanceOf(TextBox);
+      if (itemToInsert instanceof TextBox) {
+        expect(itemToInsert.getFontFamily()).toEqual('CustomFont');
+        expect(itemToInsert.getFontSize()).toEqual(42);
+        expect(itemToInsert.getFontWeight()).toEqual('bold');
+        expect(itemToInsert.getFontStyle()).toEqual('italic');
+
+        // Verify metadata is preserved in the item to insert
+        expect(penalty.getMetadata(MetadataKey.ItemIndexBeforeHyphenation)).toBe(0);
+        expect(penalty.getMetadata(MetadataKey.SyllableCount)).toBe(4); // hy-phen-a-tion
+      }
+    });
+  });
 
 });
 

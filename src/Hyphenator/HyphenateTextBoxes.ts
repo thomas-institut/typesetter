@@ -104,7 +104,7 @@ export function hyphenateTextBoxes(options: HyphenateTextBoxesOptions): ItemArra
       newTextBox.setText(syllables[syllableIndex]);
       newItems.push(newTextBox);
       if (syllableIndex < numSyllables - 1) {
-        const hyphenPenalty = createHyphenPenalty();
+        const hyphenPenalty = createHyphenPenalty(item);
         hyphenPenalty.addMetadata(MetadataKey.ItemIndexBeforeHyphenation, itemIndex);
         hyphenPenalty.addMetadata(MetadataKey.SyllableIndex, syllableIndex);
         hyphenPenalty.addMetadata(MetadataKey.SyllableCount, numSyllables);
@@ -162,6 +162,9 @@ export function hyphenateTextBoxes(options: HyphenateTextBoxesOptions): ItemArra
   return {itemArray: newItemArray, bidiOrderInfoArray: orderedBidiOrderInfoArray};
 }
 
-function createHyphenPenalty(): Penalty {
-  return (new Penalty()).setPenalty(GoodPointForBreak).setItemToInsert(TextBoxFactory.simpleText(Hyphen).setTextDirection('ltr')).setFlag(true);
+function createHyphenPenalty(originalTextBox: TextBox): Penalty {
+  const hyphenTextBox = TextBoxFactory.clone(originalTextBox);
+  hyphenTextBox.setText(Hyphen);
+  hyphenTextBox.setTextDirection('ltr');
+  return (new Penalty()).setPenalty(GoodPointForBreak).setItemToInsert(hyphenTextBox).setFlag(true);
 }
