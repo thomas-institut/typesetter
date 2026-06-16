@@ -53,7 +53,7 @@ export class Typesetter {
   }
 
   /**
-   * Splits a horizontal list into line: converts a horizontal list into a vertical list
+   * Splits a horizontal list into lines: converts a horizontal list into a vertical list
    * consisting of a series of lines of a certain width (given previously
    * to the typesetter) and inter-line glue.
    *

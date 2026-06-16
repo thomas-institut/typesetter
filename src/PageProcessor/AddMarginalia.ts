@@ -161,10 +161,6 @@ export class AddMarginalia extends PageProcessor {
       }
       page.addItem(marginaliaList);
       resolve(page);
-
     });
-
-
   }
-
 }

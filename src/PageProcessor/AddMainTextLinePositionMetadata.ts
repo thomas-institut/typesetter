@@ -20,9 +20,9 @@
 import {PageProcessor} from './PageProcessor.js';
 import * as MetadataKey from '../MetadataKey.js';
 import * as ListType from '../ListType.js';
-import {ItemList} from '../ItemList.js';
-import {TypesetterPage} from "../TypesetterPage.js";
-import {TypesetterItem} from "../TypesetterItem.js";
+import {ItemList} from '@/ItemList';
+import {TypesetterPage} from "@/TypesetterPage";
+import {TypesetterItem} from "@/TypesetterItem";
 
 
 interface LinePositionData {
