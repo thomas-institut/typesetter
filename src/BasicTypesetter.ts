@@ -49,7 +49,8 @@ import {hyphenateTextBoxes} from "./Hyphenator/HyphenateTextBoxes.js";
 import {HyphenationLanguage} from "./Hyphenator/Hyphenator.js";
 import {toFixedPrecision} from "./toolbox/Util";
 
-const signature = 'BasicTypesetter 1.0';
+export const BasicTypesetterSignature = 'BasicTypesetter';
+export const BasicTypesetterVersion = '1.0.4';
 
 // Typesetting defaults
 
@@ -462,7 +463,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
           // VERTICAL GLUE, just add it to the list to typeset
           mainTextVerticalList.pushItem(mainTextListItem);
         } else {
-          console.warn(`${signature}: ignoring horizontal glue while building main text vertical list`);
+          console.warn(`${BasicTypesetterSignature}: ignoring horizontal glue while building main text vertical list`);
         }
         continue;
       }
@@ -503,7 +504,8 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
     //
     let thePages = [];
     let doc = new TypesetterDocument();
-    doc.addMetadata('typesetter', signature);
+    doc.addMetadata('typesetter', BasicTypesetterSignature);
+    doc.addMetadata('typesetterVersion', BasicTypesetterVersion);
     let resetLineNumbersEachPage = this.options.lineNumbersOptions.resetEachPage;
     if (resetLineNumbersEachPage === undefined) {
       throw new Error(`Cannot determine whether to reset line numbers each page. Please set the 'resetEachPage' option.`);
