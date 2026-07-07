@@ -1,6 +1,6 @@
 import { isNumeric, isWhiteSpace } from './Util.js'
 
-const punctuationRegex = /[.,;\]\[()]/gi
+const punctuationRegex = /[.,;\]\['()“”"«»‘’]/gi
 const latinScriptNumberRegex = /[0-9]/gi
 
 // Based on http://www.unicode.org/Public/UNIDATA/extracted/DerivedBidiClass.txt
@@ -41,7 +41,7 @@ export class LanguageDetector {
     }
     // 2. Is it all (common) neutral characters?
     // TODO: make a better list of neutrals
-    const neutralCharacters = [ '[', ']', '(', ')', '{', '}', '«', '»', '.', ',', ';', ':', '"', ' ']
+    const neutralCharacters = [ '[', ']', '(', ')', '{', '}', '«', '»', '.', ',', ';', "'", '־', '״',':', '"', ' ', '“', '”', '‘', '’']
     let allNeutrals = true
     for(let i = 0; i < word.length; i++) {
       if (neutralCharacters.indexOf(word.charAt(i)) === -1) {
@@ -55,7 +55,7 @@ export class LanguageDetector {
 
     // 2. Is it a numeric string possibly surrounded by brackets or other neutrals?
     let firstNonStartingNeutral = -1
-    const startingNeutrals = [ '[', ']', '(', ')', '{', '}', '«', '»', '"', ' ']
+    const startingNeutrals = [ '[', ']', '(', ')', "'", '־', '״', '{', '}', '«', '»', '"', ' ', '“', '”', '‘', '’']
     for(let i = 0; i < word.length; i++) {
       if (startingNeutrals.indexOf(word.charAt(i)) === -1) {
         firstNonStartingNeutral = i
@@ -103,15 +103,15 @@ export class LanguageDetector {
   }
 
   detectScript(text: string, ignorePunctuation = true): string {
-    let stringLength = text.length
-    for(const [ lang, regex] of Object.entries(regexes)) {
-      let matches = text.match(regex) || []
-      let numMatches = matches.length
-      if (ignorePunctuation) {
-        let punctuationMatches = text.match(punctuationRegex) || []
-        numMatches += punctuationMatches.length
-      }
-      if (numMatches === stringLength) {
+    const textWithoutNeutrals = text.replace(punctuationRegex, '').replace(latinScriptNumberRegex, '').replace(/\s/g, '');
+    if (textWithoutNeutrals.length === 0) {
+      return ''
+    }
+
+    for (const [lang, regex] of Object.entries(regexes)) {
+      const textToTest = ignorePunctuation ? textWithoutNeutrals : text;
+      const matches = textToTest.match(regex) || []
+      if (matches.length === textToTest.length) {
         return lang
       }
     }

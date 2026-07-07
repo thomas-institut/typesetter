@@ -1,7 +1,7 @@
-import {ItemList} from '../ItemList.js';
-import {TypesetterItem} from "../TypesetterItem.js";
-import {TextBoxMeasurer} from "../TextBoxMeasurer/TextBoxMeasurer.js";
-import {BidiOrderInfo} from "../Bidi/BidiOrderInfo.js";
+import {ItemList} from '@/ItemList';
+import {TypesetterItem} from "@/TypesetterItem";
+import {TextBoxMeasurer} from "@/TextBoxMeasurer";
+import {BidiOrderInfo} from "@/Bidi";
 
 export class LineBreaker {
   constructor() {
