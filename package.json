@@ -1,6 +1,6 @@
 {
   "name": "@thomas-inst/typesetter",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "scripts": {
     "test": "vitest run",
