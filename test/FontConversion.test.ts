@@ -65,7 +65,7 @@ describe('FontConversion', () =>{
   })
 
   test( 'Arabic Text', () => {
-    let arabicFont = 'MyArabicFont'
+    let arabicFont = 'Amiri'
     let fontConvDef = { from: {script: 'ar'}, to: { fontFamily: arabicFont}}
     let defArray = arrayCopy(multipleFontConvDef)
     defArray.push(fontConvDef)
@@ -96,6 +96,66 @@ describe('FontConversion', () =>{
     expect(convertedItem.getFontFamily()).toBe(font)
     expect(convertedItem.getFontWeight()).toBe(weight)
 
+  })
+
+  test( 'Hebrew Text', () => {
+    let hebrewFont = 'SBL Hebrew'
+    let fontConvDef = { from: {script: 'he'}, to: { fontFamily: hebrewFont, fontSizeFactor: 1.2}}
+    let defArray = [fontConvDef]
+
+    let hebrewItem = TextBoxFactory.simpleText('שלום')
+    let originalSize = hebrewItem.getFontSize()
+    let convertedItem = FontConversions.applyFontConversions(hebrewItem, defArray)
+    expect(convertedItem.getFontFamily()).toBe(hebrewFont)
+    expect(convertedItem.getFontSize()).toBe(originalSize * 1.2)
+  })
+
+  test( 'Greek Text', () => {
+    let greekFont = 'Gentium'
+    let fontConvDef = { from: {script: 'el'}, to: { fontFamily: greekFont}}
+    let defArray = [fontConvDef]
+
+    let greekItem = TextBoxFactory.simpleText('λόγος')
+    let convertedItem = FontConversions.applyFontConversions(greekItem, defArray)
+    expect(convertedItem.getFontFamily()).toBe(greekFont)
+  })
+
+  test( 'Latin Text', () => {
+    let latinFont = 'Garamond'
+    let fontConvDef = { from: {script: 'la'}, to: { fontFamily: latinFont}}
+    let defArray = [fontConvDef]
+
+    let latinItem = TextBoxFactory.simpleText('latin')
+    let convertedItem = FontConversions.applyFontConversions(latinItem, defArray)
+    expect(convertedItem.getFontFamily()).toBe(latinFont)
+
+    // Negative tests: Hebrew text should NOT be converted
+    let hebrewItem = TextBoxFactory.simpleText('שלום')
+    let originalFont = hebrewItem.getFontFamily()
+    convertedItem = FontConversions.applyFontConversions(hebrewItem, defArray)
+    expect(convertedItem.getFontFamily()).toBe(originalFont)
+
+    let hebrewPunctItem = TextBoxFactory.simpleText('ב”הסתעפות“')
+    originalFont = hebrewPunctItem.getFontFamily()
+    convertedItem = FontConversions.applyFontConversions(hebrewPunctItem, defArray)
+    expect(convertedItem.getFontFamily()).toBe(originalFont)
+  })
+
+  test( 'Multiple Script Rules', () => {
+    let defs = [
+      { from: { script: 'ar' }, to: { fontFamily: 'Amiri' } },
+      { from: { script: 'he' }, to: { fontFamily: 'SBL Hebrew' } },
+      { from: { script: 'la' }, to: { fontFamily: 'Garamond' } }
+    ]
+
+    let arabicItem = TextBoxFactory.simpleText('يشسي')
+    expect(FontConversions.applyFontConversions(arabicItem, defs).getFontFamily()).toBe('Amiri')
+
+    let hebrewItem = TextBoxFactory.simpleText('שלום')
+    expect(FontConversions.applyFontConversions(hebrewItem, defs).getFontFamily()).toBe('SBL Hebrew')
+
+    let latinItem = TextBoxFactory.simpleText('latin')
+    expect(FontConversions.applyFontConversions(latinItem, defs).getFontFamily()).toBe('Garamond')
   })
 })
 

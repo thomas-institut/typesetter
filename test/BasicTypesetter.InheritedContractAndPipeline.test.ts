@@ -1,5 +1,5 @@
 import {describe, expect, it, vi} from "vitest";
-import {BasicTypesetter} from "@/BasicTypesetter";
+import {BasicTypesetter, BasicTypesetterSignature, BasicTypesetterVersion} from "@/BasicTypesetter";
 import {ItemList} from "@/ItemList";
 import {createItemArrayFromString} from "@/ItemArrayFromString";
 import {HorizontalItemDirection, VerticalItemDirection} from "@/TypesetterItemDirection";
@@ -204,7 +204,8 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
     const doc = await typesetter.typeset(mainTextList);
 
     expect(doc.getPageCount()).toBeGreaterThan(1);
-    expect(doc.getMetadata('typesetter')).toBe('BasicTypesetter 1.0');
+    expect(doc.getMetadata('typesetter')).toBe(BasicTypesetterSignature);
+    expect(doc.getMetadata('typesetterVersion')).toBe(BasicTypesetterVersion);
 
     doc.getPages().forEach((page, index) => {
       expect(page.getMetadata(MetadataKey.PageNumber)).toBe(index + 1);
