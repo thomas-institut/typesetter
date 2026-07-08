@@ -1,17 +1,15 @@
-// noinspection ES6PreferShortImport
-
 import {LineBreaker} from './LineBreaker.js';
-import {InfinitePenalty, MinusInfinitePenalty, Penalty} from '../Penalty.js';
-import {Box} from '../Box.js';
-import {ItemList} from '../ItemList.js';
+import {InfinitePenalty, MinusInfinitePenalty, Penalty} from '@/Penalty';
+import {Box} from '@/Box';
+import {ItemList} from '@/ItemList';
 import * as TypesetterItemDirection from '../TypesetterItemDirection.js';
 import * as MetadataKey from '../MetadataKey.js';
-import {Glue} from '../Glue.js';
-import {AdjustmentRatio} from '../AdjustmentRatio.js';
-import {ItemArray} from '../ItemArray.js';
-import {TypesetterItem} from "../TypesetterItem.js";
-import {TextBoxMeasurer} from "../TextBoxMeasurer/TextBoxMeasurer.js";
-import {BidiOrderInfo} from "../Bidi/BidiOrderInfo.js";
+import {Glue} from '@/Glue';
+import {AdjustmentRatio} from '@/AdjustmentRatio';
+import {ItemArray} from '@/ItemArray';
+import {TypesetterItem} from "@/TypesetterItem";
+import {TextBoxMeasurer} from "@/TextBoxMeasurer";
+import {BidiOrderInfo} from "@/Bidi";
 
 const InfiniteBadness = 100000000;
 const FlagPenalty = 500;
@@ -33,41 +31,35 @@ export class FirstFitLineBreaker extends LineBreaker {
    * @param {BidiOrderInfo[]}bidiOrderInfoArray
    * @return {Promise<ItemList[]>}
    */
-  static breakIntoLines(itemArray: TypesetterItem[], lineWidth: number, textBoxMeasurer: TextBoxMeasurer, bidiOrderInfoArray: BidiOrderInfo[]): Promise<ItemList[]> {
-    return new Promise(async (resolve) => {
-      if (itemArray.length !== bidiOrderInfoArray.length) {
-        console.error(`itemArray is not the same length as bidiOrderInfoArray`);
-        resolve([]);
-        return;
-      }
-      // save the original array indexes into the items
-      itemArray = itemArray.map((item, index) => {
-        item.addMetadata(MetadataKey.OriginalArrayIndex, index);
-        return item;
-      });
-
-      // hyphenate the text boxes
-
-
-      const lineBreaks = await this.getBreakPoints(itemArray, lineWidth, textBoxMeasurer, bidiOrderInfoArray);
-      // add a break at the end if there isn't one
-      if (lineBreaks[lineBreaks.length - 1] !== itemArray.length - 1) {
-        lineBreaks.push(itemArray.length - 1);
-      }
-      debug && console.log(`Break points:`);
-      debug && console.log(lineBreaks);
-      const lines = this.getLinesFromBreakpoints(itemArray, lineBreaks);
-      debug && console.log(`Lines:`);
-      debug && console.log(lines.map((line) => {
-        return {text: line.getText(), data: line.metadata};
-      }));
-      // final line measurement
-      // should be very quick since all possible merged combinations have been measured before
-      for (let i = 0; i < lines.length; i++) {
-        await ItemArray.measureTextBoxes(lines[i].getList(), textBoxMeasurer);
-      }
-      resolve(lines);
+  static async breakIntoLines(itemArray: TypesetterItem[], lineWidth: number, textBoxMeasurer: TextBoxMeasurer, bidiOrderInfoArray: BidiOrderInfo[]): Promise<ItemList[]> {
+    if (itemArray.length !== bidiOrderInfoArray.length) {
+      console.error(`itemArray is not the same length as bidiOrderInfoArray`);
+      return [];
+    }
+    // save the original array indexes into the items
+    itemArray = itemArray.map((item, index) => {
+      item.addMetadata(MetadataKey.OriginalArrayIndex, index);
+      return item;
     });
+
+    const lineBreaks = await this.getBreakPoints(itemArray, lineWidth, textBoxMeasurer, bidiOrderInfoArray);
+    // add a break at the end if there isn't one
+    if (lineBreaks[lineBreaks.length - 1] !== itemArray.length - 1) {
+      lineBreaks.push(itemArray.length - 1);
+    }
+    debug && console.log(`Break points:`);
+    debug && console.log(lineBreaks);
+    const lines = this.getLinesFromBreakpoints(itemArray, lineBreaks);
+    debug && console.log(`Lines:`);
+    debug && console.log(lines.map((line) => {
+      return {text: line.getText(), data: line.metadata};
+    }));
+    // final line measurement
+    // should be very quick since all possible merged combinations have been measured before
+    for (let i = 0; i < lines.length; i++) {
+      await ItemArray.measureTextBoxes(lines[i].getList(), textBoxMeasurer);
+    }
+    return lines;
   }
 
   /**
@@ -79,81 +71,79 @@ export class FirstFitLineBreaker extends LineBreaker {
    * @return {Promise<number[]>}
    * @private
    */
-  static getBreakPoints(itemArray: TypesetterItem[], lineWidth: number, textBoxMeasurer: TextBoxMeasurer, _bidiOrderInfoArray: BidiOrderInfo[]): Promise<number[]> {
-    return new Promise(async (resolve) => {
-      debug && console.log(`Getting break points of a paragraph with ${itemArray.length} items`);
-      const breaks = [];
-      let currentBadness = InfiniteBadness;
-      let currentLine: TypesetterItem[] = [];
-      let currentBestBreakPoint = -1;
-      let flagsInARow = 0;
-      for (let i = 0; i < itemArray.length; i++) {
-        const item = itemArray[i];
-        if (item instanceof Box) {
-          // item is a BOX
-          // just add it to current line
-          currentLine.push(item);
-          continue;
-        }
-        if (item instanceof Penalty) {
-          // item is a PENALTY
-          const penaltyValue = item.getPenalty();
-          if (penaltyValue === MinusInfinitePenalty) {
-            // minus infinite penalty, add a break
-            breaks.push(i);
-            flagsInARow = 0;
-            currentLine = [];
-            continue;
-          }
-          if (currentLine.length !== 0 && penaltyValue < InfinitePenalty) {
-            // tentative breaking point
-            const breakBadness = await this.calculateHorizontalBadness(currentLine, lineWidth, textBoxMeasurer, item, flagsInARow);
-            debug && console.log(`Badness breaking at ${i} is ${breakBadness}`);
-            if (breakBadness > currentBadness) {
-              // we found a minimum, eject line
-              debug && console.log(`...which is more than current badness (${currentBadness}), so insert a break at ${currentBestBreakPoint} `);
-              breaks.push(currentBestBreakPoint);
-              flagsInARow = this.getUpdatedFlagsInARow(itemArray[currentBestBreakPoint], flagsInARow);
-              currentLine = this.initializeLine(currentBestBreakPoint, i, itemArray);
-              currentBadness = InfiniteBadness;
-              currentBestBreakPoint = -1;
-            } else {
-              currentBestBreakPoint = i;
-              currentBadness = breakBadness;
-            }
-          }
-          continue;
-        }
-        if (item instanceof Glue) {
-          if (i > 0 && itemArray[i - 1] instanceof Box) {
-            // Since the previous item was a box, this is tentative break point
-            const breakBadness = await this.calculateHorizontalBadness(currentLine, lineWidth, textBoxMeasurer);
-            if (breakBadness > currentBadness) {
-              // we found a minimum, eject line
-              debug && console.log(`...which is more than current badness (${currentBadness}), so insert a break at ${currentBestBreakPoint} `);
-              breaks.push(currentBestBreakPoint);
-              flagsInARow = this.getUpdatedFlagsInARow(itemArray[currentBestBreakPoint], flagsInARow);
-              currentLine = this.initializeLine(currentBestBreakPoint, i, itemArray);
-              currentBadness = InfiniteBadness;
-              currentBestBreakPoint = -1;
-            } else {
-              // debug && console.log(`...which is less or equal than current badness (${currentBadness}), so ${i} is the current best break point `)
-              currentBadness = breakBadness;
-              currentBestBreakPoint = i;
-              currentLine.push(item);
-            }
-          } else {
-            if (currentLine.length !== 0) {
-              // add the glue item only if the current is not empty
-              currentLine.push(item);
-            }
-          }
-          continue;
-        }
-        console.warn(`Unknown TypesetterItem, we should NEVER get here!`);
+  static async getBreakPoints(itemArray: TypesetterItem[], lineWidth: number, textBoxMeasurer: TextBoxMeasurer, _bidiOrderInfoArray: BidiOrderInfo[]): Promise<number[]> {
+    debug && console.log(`Getting break points of a paragraph with ${itemArray.length} items`);
+    const breaks = [];
+    let currentBadness = InfiniteBadness;
+    let currentLine: TypesetterItem[] = [];
+    let currentBestBreakPoint = -1;
+    let flagsInARow = 0;
+    for (let i = 0; i < itemArray.length; i++) {
+      const item = itemArray[i];
+      if (item instanceof Box) {
+        // item is a BOX
+        // just add it to current line
+        currentLine.push(item);
+        continue;
       }
-      resolve(breaks);
-    });
+      if (item instanceof Penalty) {
+        // item is a PENALTY
+        const penaltyValue = item.getPenalty();
+        if (penaltyValue === MinusInfinitePenalty) {
+          // minus infinite penalty, add a break
+          breaks.push(i);
+          flagsInARow = 0;
+          currentLine = [];
+          continue;
+        }
+        if (currentLine.length !== 0 && penaltyValue < InfinitePenalty) {
+          // tentative breaking point
+          const breakBadness = await this.calculateHorizontalBadness(currentLine, lineWidth, textBoxMeasurer, item, flagsInARow);
+          debug && console.log(`Badness breaking at ${i} is ${breakBadness}`);
+          if (breakBadness > currentBadness) {
+            // we found a minimum, eject line
+            debug && console.log(`...which is more than current badness (${currentBadness}), so insert a break at ${currentBestBreakPoint} `);
+            breaks.push(currentBestBreakPoint);
+            flagsInARow = this.getUpdatedFlagsInARow(itemArray[currentBestBreakPoint], flagsInARow);
+            currentLine = this.initializeLine(currentBestBreakPoint, i, itemArray);
+            currentBadness = InfiniteBadness;
+            currentBestBreakPoint = -1;
+          } else {
+            currentBestBreakPoint = i;
+            currentBadness = breakBadness;
+          }
+        }
+        continue;
+      }
+      if (item instanceof Glue) {
+        if (i > 0 && itemArray[i - 1] instanceof Box) {
+          // Since the previous item was a box, this is tentative break point
+          const breakBadness = await this.calculateHorizontalBadness(currentLine, lineWidth, textBoxMeasurer);
+          if (breakBadness > currentBadness) {
+            // we found a minimum, eject line
+            debug && console.log(`...which is more than current badness (${currentBadness}), so insert a break at ${currentBestBreakPoint} `);
+            breaks.push(currentBestBreakPoint);
+            flagsInARow = this.getUpdatedFlagsInARow(itemArray[currentBestBreakPoint], flagsInARow);
+            currentLine = this.initializeLine(currentBestBreakPoint, i, itemArray);
+            currentBadness = InfiniteBadness;
+            currentBestBreakPoint = -1;
+          } else {
+            // debug && console.log(`...which is less or equal than current badness (${currentBadness}), so ${i} is the current best break point `)
+            currentBadness = breakBadness;
+            currentBestBreakPoint = i;
+            currentLine.push(item);
+          }
+        } else {
+          if (currentLine.length !== 0) {
+            // add the glue item only if the current is not empty
+            currentLine.push(item);
+          }
+        }
+        continue;
+      }
+      console.warn(`Unknown TypesetterItem, we should NEVER get here!`);
+    }
+    return breaks;
   }
 
   /**
@@ -214,34 +204,31 @@ export class FirstFitLineBreaker extends LineBreaker {
    * @return {Promise<number>}
    * @private
    */
-  static calculateHorizontalBadness(itemArray: TypesetterItem[], lineWidth: number, textBoxMeasurer: TextBoxMeasurer, penalty: Penalty | null = null, flagsInARow: number = 0): Promise<number> {
-    return new Promise(async (resolve) => {
-      const lineItemArray = [...itemArray];
-      let penaltyValue = 0;
-      if (penalty !== null) {
-        penaltyValue = penalty.getPenalty();
-        const itemToInsert = penalty.getItemToInsert();
-        if (itemToInsert !== null) {
-          lineItemArray.push(itemToInsert);
-        }
-        if (penalty.isFlagged()) {
-          penaltyValue += (flagsInARow + 1) * FlagPenalty;
-        }
+  static async calculateHorizontalBadness(itemArray: TypesetterItem[], lineWidth: number, textBoxMeasurer: TextBoxMeasurer, penalty: Penalty | null = null, flagsInARow: number = 0): Promise<number> {
+    const lineItemArray = [...itemArray];
+    let penaltyValue = 0;
+    if (penalty !== null) {
+      penaltyValue = penalty.getPenalty();
+      const itemToInsert = penalty.getItemToInsert();
+      if (itemToInsert !== null) {
+        lineItemArray.push(itemToInsert);
       }
-      await ItemArray.measureTextBoxes(lineItemArray, textBoxMeasurer);
-      const adjRatio = AdjustmentRatio.calculateHorizontalAdjustmentRatio(lineItemArray, lineWidth);
-      if (adjRatio === null) {
-        // no glue available to adjust the line. Terrible.
-        resolve(InfiniteBadness);
-        return;
+      if (penalty.isFlagged()) {
+        penaltyValue += (flagsInARow + 1) * FlagPenalty;
       }
-      if (adjRatio < -1) {
-        // No shrinking past the maximum, so any adjustment ratio of -1 or less is infinitely bad
-        resolve(InfiniteBadness);
-      }
-      const badness = 100 * Math.pow(Math.abs(adjRatio), 3);
-      resolve(badness > InfiniteBadness ? InfiniteBadness : badness + penaltyValue);
-    });
+    }
+    await ItemArray.measureTextBoxes(lineItemArray, textBoxMeasurer);
+    const adjRatio = AdjustmentRatio.calculateHorizontalAdjustmentRatio(lineItemArray, lineWidth);
+    if (adjRatio === null) {
+      // no glue available to adjust the line. Terrible.
+      return InfiniteBadness;
+    }
+    if (adjRatio < -1) {
+      // No shrinking past the maximum, so any adjustment ratio of -1 or less is infinitely bad
+      return InfiniteBadness;
+    }
+    const badness = 100 * Math.pow(Math.abs(adjRatio), 3);
+    return badness > InfiniteBadness ? InfiniteBadness : badness + penaltyValue;
   }
 
   /**

@@ -18,10 +18,10 @@ export class LineBreaker {
    * @param _bidiOrderInfoArray
    * @return {Promise<ItemList[]>}
    */
-  static breakIntoLines(itemArray: TypesetterItem[], _lineWidth: number, _textBoxMeasurer: TextBoxMeasurer, _bidiOrderInfoArray: BidiOrderInfo[]): Promise<ItemList[]> {
+  static async breakIntoLines(itemArray: TypesetterItem[], _lineWidth: number, _textBoxMeasurer: TextBoxMeasurer, _bidiOrderInfoArray: BidiOrderInfo[]): Promise<ItemList[]> {
     // do nothing
     const theList = new ItemList();
     theList.setList(itemArray);
-    return Promise.resolve([theList]);
+    return [theList];
   }
 }
