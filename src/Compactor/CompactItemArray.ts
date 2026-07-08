@@ -16,7 +16,7 @@ const debug = false;
  * same formatting and text direction.
  */
 export function compactItemArray(itemArrayWithBidiOrderInfo: ItemArrayWithBidiOrderInfo): ItemArrayWithBidiOrderInfo {
-  let {itemArray, bidiOrderInfoArray} = itemArrayWithBidiOrderInfo;
+  const {itemArray, bidiOrderInfoArray} = itemArrayWithBidiOrderInfo;
   if (itemArray.length === 0) {
     return {itemArray: [], bidiOrderInfoArray: []};
   }
@@ -28,28 +28,28 @@ export function compactItemArray(itemArrayWithBidiOrderInfo: ItemArrayWithBidiOr
   debug && console.log(`Compacting item array`);
   debug && console.log(`Original bidiOrder`);
   debug && console.log(bidiOrderInfoArray);
-  let levelInfoArray = BidiOrderInfoArray.getLevelInfoFromBidiOrderInfoArray(bidiOrderInfoArray);
-  let defaultTextDirection = BidiOrderInfoArray.detectDefaultTextDirectionFromLevelInfoArray(levelInfoArray, bidiOrderInfoArray);
+  const levelInfoArray = BidiOrderInfoArray.getLevelInfoFromBidiOrderInfoArray(bidiOrderInfoArray);
+  const defaultTextDirection = BidiOrderInfoArray.detectDefaultTextDirectionFromLevelInfoArray(levelInfoArray, bidiOrderInfoArray);
 
   debug && console.log(`Default text direction is '${defaultTextDirection}'`);
-  let newItemArray: TypesetterItem[] = [];
-  let newBidiOrderInfoArray: BidiOrderInfo[] = [];
+  const newItemArray: TypesetterItem[] = [];
+  const newBidiOrderInfoArray: BidiOrderInfo[] = [];
   let lastIndex = -1;
   levelInfoArray.forEach((levelInfo, index) => {
     debug && console.log(`Processing level info ${index}`);
     debug && console.log(levelInfo);
-    let levelItemArray = [];
+    const levelItemArray = [];
     for (let i = levelInfo.start; i <= levelInfo.end; i++) {
       levelItemArray.push(itemArray[i]);
     }
-    let compactedLevelRun = compactLevelItemArray(levelItemArray);
+    const compactedLevelRun = compactLevelItemArray(levelItemArray);
     debug && console.log(`Original level run has ${levelItemArray.length} items, compacted has ${compactedLevelRun.length}`);
     newItemArray.push(...compactedLevelRun);
-    let newLevelStartIndex = lastIndex + 1;
-    let newLevelEndIndex = lastIndex + compactedLevelRun.length;
+    const newLevelStartIndex = lastIndex + 1;
+    const newLevelEndIndex = lastIndex + compactedLevelRun.length;
 
     for (let i = 0; i < compactedLevelRun.length; i++) {
-      let newBidiOrderInfo: BidiOrderInfo = {
+      const newBidiOrderInfo: BidiOrderInfo = {
         inputIndex: -1, displayOrder: -1, intrinsicTextDirection: '', textDirection: '', embeddingLevel: -1
       };
       newBidiOrderInfo.textDirection = levelInfo.textDirection;
@@ -81,11 +81,11 @@ function compactLevelItemArray(itemArray: TypesetterItem[]): TypesetterItem[] {
     if (currentArray.length === 0) {
       return [item];
     }
-    let lastItem = currentArray.pop();
+    const lastItem = currentArray.pop();
     if (lastItem === undefined) {
       throw new Error(`lastItem is undefined`);
     }
-    let mergedArray = mergeItemWithNext(lastItem, item);
+    const mergedArray = mergeItemWithNext(lastItem, item);
     currentArray.push(...mergedArray);
     return currentArray;
   }, []);
@@ -133,7 +133,7 @@ function mergeItemWithNext(item: TypesetterItem, nextItem: TypesetterItem): Type
     }
     // debug && console.log(`...font specs are equal, merging`)
     // creating a new object so that the original object is not changed
-    let newItem = ObjectFactory.fromObject(item.getExportObject()) as TextBox;
+    const newItem = ObjectFactory.fromObject(item.getExportObject()) as TextBox;
 
     newItem.addMetadata(MetadataKey.MergedItem, true);
     newItem.setTextDirection(item.getTextDirection());

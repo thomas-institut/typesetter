@@ -64,8 +64,8 @@ export class AddMainTextLinePositionMetadata extends PageProcessor {
    * @return {Promise<TypesetterPage>}
    */
   async process(page: TypesetterPage): Promise<TypesetterPage> {
-    let pageItems = page.getItems();
-    let mainTextIndex = pageItems.map((item) => {
+    const pageItems = page.getItems();
+    const mainTextIndex = pageItems.map((item) => {
       return item.hasMetadata(MetadataKey.ListType) ? item.getMetadata(MetadataKey.ListType) : 'undefined';
     }).indexOf(ListType.MainTextBlockList);
     if (mainTextIndex === -1) {
@@ -77,11 +77,11 @@ export class AddMainTextLinePositionMetadata extends PageProcessor {
     this.debug && console.log(`Adding line position metadata for page ${page.getMetadata(MetadataKey.PageNumber)}`);
     this.debug && console.log(`MainTextBlock at index ${mainTextIndex}`);
 
-    let mainTextList = pageItems[mainTextIndex];
+    const mainTextList = pageItems[mainTextIndex];
     this.debug && console.log(mainTextList);
     if (mainTextList instanceof ItemList) {
-      let linesWithNumberIndices: number[] = [];
-      let mainTextListItems = mainTextList.getList();
+      const linesWithNumberIndices: number[] = [];
+      const mainTextListItems = mainTextList.getList();
       mainTextListItems.forEach((item, itemIndex) => {
         if (!item.hasMetadata(MetadataKey.ListType)) {
           this.debug && console.log(`Main text item ${itemIndex} not a list`);
@@ -100,7 +100,7 @@ export class AddMainTextLinePositionMetadata extends PageProcessor {
           return;
         }
         // a line of the right type
-        let lineNumber = item.getMetadata(MetadataKey.LineNumber);
+        const lineNumber = item.getMetadata(MetadataKey.LineNumber);
         this.debug && console.log(`MAIN TEXT item ${itemIndex} is line ${lineNumber}`);
         if (lineNumber !== undefined) {
           linesWithNumberIndices.push(itemIndex);
@@ -110,11 +110,11 @@ export class AddMainTextLinePositionMetadata extends PageProcessor {
       this.debug && console.log(`linesWithNumberIndices`);
       this.debug && console.log(linesWithNumberIndices);
 
-      let yPositions = this._getYPositions(mainTextListItems);
+      const yPositions = this._getYPositions(mainTextListItems);
 
-      let data: LinePositionData[] = [];
+      const data: LinePositionData[] = [];
       linesWithNumberIndices.forEach((index) => {
-        let lineNumber = mainTextListItems[index].getMetadata(MetadataKey.LineNumber) as number;
+        const lineNumber = mainTextListItems[index].getMetadata(MetadataKey.LineNumber) as number;
         data.push({
           listIndex: index, lineNumber: lineNumber, y: yPositions[index]
         });
@@ -125,7 +125,7 @@ export class AddMainTextLinePositionMetadata extends PageProcessor {
   }
 
   _getYPositions(items: TypesetterItem[]): number[] {
-    let yPositions: number[] = [];
+    const yPositions: number[] = [];
     let currentY = 0;
     items.forEach((item) => {
       yPositions.push(currentY);

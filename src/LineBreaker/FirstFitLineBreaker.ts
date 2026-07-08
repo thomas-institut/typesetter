@@ -49,14 +49,14 @@ export class FirstFitLineBreaker extends LineBreaker {
       // hyphenate the text boxes
 
 
-      let lineBreaks = await this.getBreakPoints(itemArray, lineWidth, textBoxMeasurer, bidiOrderInfoArray);
+      const lineBreaks = await this.getBreakPoints(itemArray, lineWidth, textBoxMeasurer, bidiOrderInfoArray);
       // add a break at the end if there isn't one
       if (lineBreaks[lineBreaks.length - 1] !== itemArray.length - 1) {
         lineBreaks.push(itemArray.length - 1);
       }
       debug && console.log(`Break points:`);
       debug && console.log(lineBreaks);
-      let lines = this.getLinesFromBreakpoints(itemArray, lineBreaks);
+      const lines = this.getLinesFromBreakpoints(itemArray, lineBreaks);
       debug && console.log(`Lines:`);
       debug && console.log(lines.map((line) => {
         return {text: line.getText(), data: line.metadata};
@@ -82,13 +82,13 @@ export class FirstFitLineBreaker extends LineBreaker {
   static getBreakPoints(itemArray: TypesetterItem[], lineWidth: number, textBoxMeasurer: TextBoxMeasurer, _bidiOrderInfoArray: BidiOrderInfo[]): Promise<number[]> {
     return new Promise(async (resolve) => {
       debug && console.log(`Getting break points of a paragraph with ${itemArray.length} items`);
-      let breaks = [];
+      const breaks = [];
       let currentBadness = InfiniteBadness;
       let currentLine: TypesetterItem[] = [];
       let currentBestBreakPoint = -1;
       let flagsInARow = 0;
       for (let i = 0; i < itemArray.length; i++) {
-        let item = itemArray[i];
+        const item = itemArray[i];
         if (item instanceof Box) {
           // item is a BOX
           // just add it to current line
@@ -97,7 +97,7 @@ export class FirstFitLineBreaker extends LineBreaker {
         }
         if (item instanceof Penalty) {
           // item is a PENALTY
-          let penaltyValue = item.getPenalty();
+          const penaltyValue = item.getPenalty();
           if (penaltyValue === MinusInfinitePenalty) {
             // minus infinite penalty, add a break
             breaks.push(i);
@@ -107,7 +107,7 @@ export class FirstFitLineBreaker extends LineBreaker {
           }
           if (currentLine.length !== 0 && penaltyValue < InfinitePenalty) {
             // tentative breaking point
-            let breakBadness = await this.calculateHorizontalBadness(currentLine, lineWidth, textBoxMeasurer, item, flagsInARow);
+            const breakBadness = await this.calculateHorizontalBadness(currentLine, lineWidth, textBoxMeasurer, item, flagsInARow);
             debug && console.log(`Badness breaking at ${i} is ${breakBadness}`);
             if (breakBadness > currentBadness) {
               // we found a minimum, eject line
@@ -127,7 +127,7 @@ export class FirstFitLineBreaker extends LineBreaker {
         if (item instanceof Glue) {
           if (i > 0 && itemArray[i - 1] instanceof Box) {
             // Since the previous item was a box, this is tentative break point
-            let breakBadness = await this.calculateHorizontalBadness(currentLine, lineWidth, textBoxMeasurer);
+            const breakBadness = await this.calculateHorizontalBadness(currentLine, lineWidth, textBoxMeasurer);
             if (breakBadness > currentBadness) {
               // we found a minimum, eject line
               debug && console.log(`...which is more than current badness (${currentBadness}), so insert a break at ${currentBestBreakPoint} `);
@@ -187,7 +187,7 @@ export class FirstFitLineBreaker extends LineBreaker {
    * @private
    */
   static initializeLine(breakPoint: number, currentItemIndex: number, itemArray: TypesetterItem[]): TypesetterItem[] {
-    let line = [];
+    const line = [];
 
     // Skip initial non-box items
     let j = breakPoint;
@@ -216,7 +216,7 @@ export class FirstFitLineBreaker extends LineBreaker {
    */
   static calculateHorizontalBadness(itemArray: TypesetterItem[], lineWidth: number, textBoxMeasurer: TextBoxMeasurer, penalty: Penalty | null = null, flagsInARow: number = 0): Promise<number> {
     return new Promise(async (resolve) => {
-      let lineItemArray = [...itemArray];
+      const lineItemArray = [...itemArray];
       let penaltyValue = 0;
       if (penalty !== null) {
         penaltyValue = penalty.getPenalty();
@@ -229,7 +229,7 @@ export class FirstFitLineBreaker extends LineBreaker {
         }
       }
       await ItemArray.measureTextBoxes(lineItemArray, textBoxMeasurer);
-      let adjRatio = AdjustmentRatio.calculateHorizontalAdjustmentRatio(lineItemArray, lineWidth);
+      const adjRatio = AdjustmentRatio.calculateHorizontalAdjustmentRatio(lineItemArray, lineWidth);
       if (adjRatio === null) {
         // no glue available to adjust the line. Terrible.
         resolve(InfiniteBadness);
@@ -239,7 +239,7 @@ export class FirstFitLineBreaker extends LineBreaker {
         // No shrinking past the maximum, so any adjustment ratio of -1 or less is infinitely bad
         resolve(InfiniteBadness);
       }
-      let badness = 100 * Math.pow(Math.abs(adjRatio), 3);
+      const badness = 100 * Math.pow(Math.abs(adjRatio), 3);
       resolve(badness > InfiniteBadness ? InfiniteBadness : badness + penaltyValue);
     });
   }
@@ -253,17 +253,17 @@ export class FirstFitLineBreaker extends LineBreaker {
    * @private
    */
   static getLinesFromBreakpoints(itemArray: TypesetterItem[], breakpoints: number[]): ItemList[] {
-    let lines: ItemList[] = [];
+    const lines: ItemList[] = [];
     let lineStartIndex = 0;
     breakpoints.forEach((breakIndex) => {
-      let newLine = new ItemList(TypesetterItemDirection.HorizontalItemDirection);
+      const newLine = new ItemList(TypesetterItemDirection.HorizontalItemDirection);
       while (!(itemArray[lineStartIndex] instanceof Box) && lineStartIndex < breakIndex) {
         lineStartIndex++;
       }
       for (let i = lineStartIndex; i < breakIndex; i++) {
         newLine.pushItem(itemArray[i]);
       }
-      let breakItem = itemArray[breakIndex];
+      const breakItem = itemArray[breakIndex];
       if (breakItem instanceof Penalty) {
         const itemToInsert = breakItem.getItemToInsert();
         if (itemToInsert !== null) {

@@ -52,7 +52,7 @@ export function trimCharacters(someString: string, charactersToTrim: string[]) {
   return rTrimCharacters(lTrimCharacters(someString, charactersToTrim), charactersToTrim);
 }
 export function toFixedPrecision(someNumber: number, decimals: number) {
-  let factor = Math.pow(10, decimals);
+  const factor = Math.pow(10, decimals);
   return Math.floor(someNumber * factor) / factor;
 }
 

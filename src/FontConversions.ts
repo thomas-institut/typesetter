@@ -28,7 +28,7 @@ export class FontConversions {
       return item;
     }
     if (item instanceof TextBox) {
-      let match = this.findMatch(item, fontConversionDefinitions, defaultScript);
+      const match = this.findMatch(item, fontConversionDefinitions, defaultScript);
       if (match !== null) {
         if (match.to.fontFamily !== undefined) {
           item.setFontFamily(match.to.fontFamily);
@@ -53,14 +53,14 @@ export class FontConversions {
   private static findMatch(textBoxItem: TextBox, fontConversionDefinitions: FontConversionDefinition[], defaultScript: string) {
     let match = null;
     for (let i = 0; match === null && i < fontConversionDefinitions.length; i++) {
-      let def = fontConversionDefinitions[i];
+      const def = fontConversionDefinitions[i];
       if (def.from === undefined || def.to === undefined) {
         continue;
       }
-      let attributesToMatch = ['fontFamily', 'fontWeight', 'fontStyle'];
+      const attributesToMatch = ['fontFamily', 'fontWeight', 'fontStyle'];
       let matchFound = true;
       for (let j = 0; j < attributesToMatch.length; j++) {
-        let attr = attributesToMatch[j];
+        const attr = attributesToMatch[j];
         // @ts-expect-error Accessing TextBox members as array
         if (def.from[attr] === undefined) {
           continue;
@@ -78,8 +78,8 @@ export class FontConversions {
       }
       // style attributes match, check the script
       if (def.from.script !== undefined) {
-        let ld = new LanguageDetector(defaultScript);
-        let textScript = ld.detectScript(textBoxItem.getText());
+        const ld = new LanguageDetector(defaultScript);
+        const textScript = ld.detectScript(textBoxItem.getText());
         if (textScript === def.from.script) {
           match = def;
         } else {

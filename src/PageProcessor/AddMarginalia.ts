@@ -84,24 +84,24 @@ export class AddMarginalia extends PageProcessor {
         return;
       }
       this.debug && console.log(`Processing marginalia for page ${page.getMetadata(MetadataKey.PageNumber)}`);
-      let mainTextLineData: MainTextLineData = page.getMetadata(MetadataKey.MDK_MainTextLineData) as MainTextLineData;
-      let mainTextIndex = mainTextLineData.mainTextListIndex;
+      const mainTextLineData: MainTextLineData = page.getMetadata(MetadataKey.MDK_MainTextLineData) as MainTextLineData;
+      const mainTextIndex = mainTextLineData.mainTextListIndex;
       if (mainTextIndex === -1) {
         // no main text block, nothing to do
         this.debug && console.log(`No main text block, nothing to do`);
         resolve(page);
         return;
       }
-      let mainTextList = page.getItems()[mainTextIndex] as ItemList;
-      let mainTextListItems = mainTextList.getList();
-      let lineNumbers = mainTextLineData.lineData.map(ld => ld.lineNumber);
+      const mainTextList = page.getItems()[mainTextIndex] as ItemList;
+      const mainTextListItems = mainTextList.getList();
+      const lineNumbers = mainTextLineData.lineData.map(ld => ld.lineNumber);
 
       pageMarginalia = pageMarginalia.map((marginaliaEntry) => {
-        let lineDataIndex = lineNumbers.indexOf(marginaliaEntry.lineNumber);
+        const lineDataIndex = lineNumbers.indexOf(marginaliaEntry.lineNumber);
         marginaliaEntry.lineData = mainTextLineData.lineData[lineDataIndex];
         return marginaliaEntry;
       });
-      let marginaliaList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
+      const marginaliaList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
       marginaliaList
       .setShiftX(this.options.xPosition)
       .setShiftY(mainTextList.getShiftY())
@@ -112,13 +112,13 @@ export class AddMarginalia extends PageProcessor {
 
       for (let i = 0; i < pageMarginalia.length; i++) {
         // this.debug && console.log(`Processing marginalia entry ${i}`)
-        let lineNumberData = pageMarginalia[i].lineData;
+        const lineNumberData = pageMarginalia[i].lineData;
         this.debug && console.log(`Previous Y: ${previousY}, line height: ${previousLineHeight}, shiftY: ${previousShiftYAdjustment}`);
 
         // add inter marginalia glue
-        let glueHeight = lineNumberData.y - previousY - previousLineHeight + previousShiftYAdjustment;
+        const glueHeight = lineNumberData.y - previousY - previousLineHeight + previousShiftYAdjustment;
         if (glueHeight !== 0) {
-          let glue = new Glue(TypesetterItemDirection.VerticalItemDirection);
+          const glue = new Glue(TypesetterItemDirection.VerticalItemDirection);
           glue.setHeight(glueHeight);
           marginaliaList.pushItem(glue);
           this.debug && console.log(`Adding inter marginalia glue ${glueHeight}`);
@@ -128,7 +128,7 @@ export class AddMarginalia extends PageProcessor {
         for (let j = 0; j < pageMarginalia[i].marginalSubEntries.length; j++) {
           marginalItemArray.push(...pageMarginalia[i].marginalSubEntries[j]);
           if (j !== pageMarginalia[i].marginalSubEntries.length - 1) {
-            let interMarginGlue = new Glue();
+            const interMarginGlue = new Glue();
             // TODO: make this glue size an option
             interMarginGlue.setWidth(5);
             marginalItemArray.push(interMarginGlue);
@@ -141,15 +141,15 @@ export class AddMarginalia extends PageProcessor {
         });
 
         await ItemArray.measureTextBoxes(marginalItemArray, this.options.textBoxMeasurer);
-        let entryList = new ItemList(TypesetterItemDirection.HorizontalItemDirection);
+        const entryList = new ItemList(TypesetterItemDirection.HorizontalItemDirection);
         entryList.setList(marginalItemArray)
         .setTextDirection(this.options.defaultTextDirection);
         if (this.options.align === 'right') {
           entryList.setShiftX(-entryList.getWidth());
         }
-        let listHeight = entryList.getHeight();
+        const listHeight = entryList.getHeight();
         entryList.setHeight(listHeight);
-        let lineHeight = mainTextListItems[lineNumberData.listIndex].getHeight();
+        const lineHeight = mainTextListItems[lineNumberData.listIndex].getHeight();
         this.debug && console.log(`List height: ${listHeight}, Line height: ${lineHeight}, shiftY: ${previousShiftYAdjustment}`);
         if (listHeight !== lineHeight) {
           entryList.setShiftY(lineHeight - listHeight);

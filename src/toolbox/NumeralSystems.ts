@@ -31,10 +31,10 @@ export class NumeralSystems {
     if (n === -1) {
       return '?';
     }
-    let westernArabic = this.toWesternArabic(n);
+    const westernArabic = this.toWesternArabic(n);
     let easternArabic = '';
     for (let i = 0; i < westernArabic.length; i++) {
-      let digit = parseInt(westernArabic.charAt(i));
+      const digit = parseInt(westernArabic.charAt(i));
       if (isNaN(digit)) {
         console.log(`Found non-number in ${n}, character '${westernArabic.charAt(i)}'`);
       } else {

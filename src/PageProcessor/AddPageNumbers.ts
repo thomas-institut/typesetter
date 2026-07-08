@@ -44,9 +44,9 @@ export class AddPageNumbers extends PageProcessor {
   }
 
   process(page: TypesetterPage): Promise<TypesetterPage> {
-    let thePage = super.process(page);
+    const thePage = super.process(page);
     return new Promise(async (resolve) => {
-      let pageNumber = page.getMetadata(MetadataKey.PageNumber) as number;
+      const pageNumber = page.getMetadata(MetadataKey.PageNumber) as number;
       if (pageNumber === undefined) {
         // no page number, can't do anything
         resolve(thePage);
@@ -57,17 +57,17 @@ export class AddPageNumbers extends PageProcessor {
       if (foliation === undefined) {
         foliation = `${this._getPageNumberString(pageNumber)}`;
       }
-      let pageNumberTextBox = TextBoxFactory.simpleText(foliation, {
+      const pageNumberTextBox = TextBoxFactory.simpleText(foliation, {
         fontFamily: this.options.fontFamily, fontSize: this.options.fontSize, fontStyle: this.options.fontStyle
       });
-      let textHeight = await this.options.textBoxMeasurer.getBoxHeight(pageNumberTextBox);
+      const textHeight = await this.options.textBoxMeasurer.getBoxHeight(pageNumberTextBox);
       pageNumberTextBox.setShiftY(this.options.marginTop)
       .setHeight(textHeight)
       .addMetadata(MetadataKey.ItemType, 'PageNumber');
 
       switch (this.options.align) {
         case 'center':
-          let boxWidth = await this.options.textBoxMeasurer.getBoxWidth(pageNumberTextBox);
+          const boxWidth = await this.options.textBoxMeasurer.getBoxWidth(pageNumberTextBox);
           pageNumberTextBox.setShiftX(this.options.marginLeft + this.options.lineWidth / 2 - boxWidth / 2);
           break;
 
@@ -76,7 +76,7 @@ export class AddPageNumbers extends PageProcessor {
           break;
 
         case 'right':
-          let textWidth = await this.options.textBoxMeasurer.getBoxWidth(pageNumberTextBox);
+          const textWidth = await this.options.textBoxMeasurer.getBoxWidth(pageNumberTextBox);
           pageNumberTextBox.setShiftX(this.options.marginLeft + this.options.lineWidth - textWidth);
       }
 

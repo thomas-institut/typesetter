@@ -17,7 +17,7 @@ export class BidiOrderInfoArray {
     if (boiArray.length === 1) {
       return true;
     }
-    let lastDirection = boiArray[0].textDirection;
+    const lastDirection = boiArray[0].textDirection;
     for (let i = 1; i < boiArray.length; i++) {
       if (boiArray[i].textDirection !== lastDirection) {
         return false;
@@ -33,7 +33,7 @@ export class BidiOrderInfoArray {
    * @return {LevelInfo[]}
    */
   static getLevelInfoFromBidiOrderInfoArray(itemDataArray: BidiOrderInfo[]): LevelInfo[] {
-    let levelInfoArray = [];
+    const levelInfoArray = [];
     if (itemDataArray.length === 0) {
       return [];
     }
@@ -75,7 +75,7 @@ export class BidiOrderInfoArray {
     // TODO: optimize this. Right now I'm using the "logical" way
     //  but it can be done much faster by traversing the boiArray directly, without
     //  calculating the levelInfoArray first
-    let levelInfoArray = this.getLevelInfoFromBidiOrderInfoArray(boiArray);
+    const levelInfoArray = this.getLevelInfoFromBidiOrderInfoArray(boiArray);
     return this.detectDefaultTextDirectionFromLevelInfoArray(levelInfoArray, boiArray);
   }
 
@@ -94,7 +94,7 @@ export class BidiOrderInfoArray {
     // find a level with two or more items
     let levelWithTwoOrMoreItems = null;
     for (let i = 0; i < levelInfoArray.length; i++) {
-      let levelInfo = levelInfoArray[i];
+      const levelInfo = levelInfoArray[i];
       if (levelInfo.start !== levelInfo.end) {
         levelWithTwoOrMoreItems = levelInfo;
         break;
@@ -106,8 +106,8 @@ export class BidiOrderInfoArray {
       return boiArray[0].textDirection;
     }
 
-    let startItem = levelWithTwoOrMoreItems.start;
-    let endItem = levelWithTwoOrMoreItems.end;
+    const startItem = levelWithTwoOrMoreItems.start;
+    const endItem = levelWithTwoOrMoreItems.end;
 
     if (boiArray[startItem].displayOrder < boiArray[endItem].displayOrder) {
       // the level has the default text order

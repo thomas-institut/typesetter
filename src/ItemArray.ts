@@ -34,27 +34,27 @@ export class ItemArray {
    */
   static async measureTextBoxes(itemArray: TypesetterItem[], textBoxMeasurer: TextBoxMeasurer): Promise<void> {
     for (let i = 0; i < itemArray.length; i++) {
-      let item = itemArray[i];
+      const item = itemArray[i];
       if (item instanceof TextBox) {
         if (item.getWidth() === -1) {
           //debug && console.log(`Getting text box width`)
-          let measuredWidth = await textBoxMeasurer.getBoxWidth(item);
+          const measuredWidth = await textBoxMeasurer.getBoxWidth(item);
           item.setWidth(measuredWidth);
         }
         if (item.getHeight() === -1) {
-          let measuredHeight = await textBoxMeasurer.getBoxHeight(item);
+          const measuredHeight = await textBoxMeasurer.getBoxHeight(item);
           item.setHeight(measuredHeight);
         }
       }
       if (item instanceof Penalty) {
-        let itemToInsert = item.getItemToInsert();
+        const itemToInsert = item.getItemToInsert();
         if (itemToInsert instanceof TextBox) {
           if (itemToInsert.getWidth() === -1) {
-            let measuredWidth = await textBoxMeasurer.getBoxWidth(itemToInsert);
+            const measuredWidth = await textBoxMeasurer.getBoxWidth(itemToInsert);
             itemToInsert.setWidth(measuredWidth);
           }
           if (itemToInsert.getHeight() === -1) {
-            let measureHeight = await textBoxMeasurer.getBoxHeight(itemToInsert);
+            const measureHeight = await textBoxMeasurer.getBoxHeight(itemToInsert);
             itemToInsert.setHeight(measureHeight);
           }
         }

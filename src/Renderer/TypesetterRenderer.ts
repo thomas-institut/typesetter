@@ -35,16 +35,16 @@ export class TypesetterRenderer {
    * @param y
    */
   renderHorizontalList(horizontalList: ItemList, x = 0, y = 0) {
-    let [shiftX, shiftY] = this.getDeviceCoordinates(horizontalList.getShiftX(), horizontalList.getShiftY());
+    const [shiftX, shiftY] = this.getDeviceCoordinates(horizontalList.getShiftX(), horizontalList.getShiftY());
     let currentX = x + shiftX;
-    let currentY = y + shiftY;
-    let textDirection = horizontalList.getTextDirection();
+    const currentY = y + shiftY;
+    const textDirection = horizontalList.getTextDirection();
     if (textDirection === 'rtl') {
-      let [listWidth,] = this.getDeviceCoordinates(horizontalList.getWidth(), horizontalList.getHeight());
+      const [listWidth,] = this.getDeviceCoordinates(horizontalList.getWidth(), horizontalList.getHeight());
       currentX += listWidth;
     }
     horizontalList.getList().forEach((item) => {
-      let [itemWidth,] = this.getDeviceCoordinates(item.getWidth(), item.getHeight());
+      const [itemWidth,] = this.getDeviceCoordinates(item.getWidth(), item.getHeight());
       if (item.getTextDirection() === textDirection || item.getTextDirection() === '' || item.getTextDirection() === undefined) {
         this.renderItem(item, currentX, currentY);
       } else {
@@ -73,19 +73,19 @@ export class TypesetterRenderer {
    * @param y
    */
   renderVerticalList(verticalList: ItemList, x = 0, y = 0): void {
-    let [shiftX, shiftY] = this.getDeviceCoordinates(verticalList.getShiftX(), verticalList.getShiftY());
-    let currentX = x + shiftX;
+    const [shiftX, shiftY] = this.getDeviceCoordinates(verticalList.getShiftX(), verticalList.getShiftY());
+    const currentX = x + shiftX;
     let currentY = y + shiftY;
     verticalList.getList().forEach((item) => {
       this.renderItem(item, currentX, currentY);
-      let [, itemHeight] = this.getDeviceCoordinates(item.getWidth(), item.getHeight());
+      const [, itemHeight] = this.getDeviceCoordinates(item.getWidth(), item.getHeight());
       currentY += itemHeight;
     });
   }
 
   renderPage(page: TypesetterPage, pageIndex = 0): void {
     page.getItems().forEach((item) => {
-      let [shiftX, shiftY] = this.getShiftForPageIndex(pageIndex);
+      const [shiftX, shiftY] = this.getShiftForPageIndex(pageIndex);
       this.renderItem(item, shiftX, shiftY);
     });
   }

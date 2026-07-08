@@ -59,7 +59,7 @@ export class TypesetterPage extends TypesetterObject {
   }
 
   getExportObject() {
-    let obj = super.getExportObject();
+    const obj = super.getExportObject();
     obj.class = 'TypesetterPage';
     obj.width = this.width;
     obj.height = this.height;
@@ -76,7 +76,7 @@ export class TypesetterPage extends TypesetterObject {
     if (object['items'] !== undefined && Array.isArray(object['items'])) {
       this.items = [];
       object['items'].forEach((itemObject, i) => {
-        let newItem = ObjectFactory.fromObject(itemObject);
+        const newItem = ObjectFactory.fromObject(itemObject);
         if (newItem instanceof TypesetterItem) {
           this.items.push(newItem);
         } else {

@@ -246,7 +246,7 @@ export class Punctuation {
    * @return {boolean}
    */
   static characterIsPunctuation(char: string, lang = '', insideWord = false): boolean {
-    let definitionObjectArray = getPunctuationDefinition(lang).filter( (def: any) => { return def['char'] === char})
+    const definitionObjectArray = getPunctuationDefinition(lang).filter( (def: any) => { return def['char'] === char})
     if (definitionObjectArray.length === 0) {
       return false
     }
@@ -266,8 +266,8 @@ export class Punctuation {
    */
   static stringHasPunctuation(theString: string, lang = '') {
     for (let i = 0; i < theString.length; i++) {
-      let char = theString.charAt(i)
-      let insideWord = i > 0 && i < theString.length-1
+      const char = theString.charAt(i)
+      const insideWord = i > 0 && i < theString.length-1
       // console.log(`Processing character ${i}: '${char}', insideWord=${insideWord}`)
       if (this.characterIsPunctuation(char, lang, insideWord)) {
         return true
@@ -283,7 +283,7 @@ export class Punctuation {
    * @return {boolean}
    */
   static sticksToPrevious(char: string, lang: string): boolean {
-    let definitionObjectArray = getPunctuationDefinition(lang).filter( (def: any) => { return def['char'] === char})
+    const definitionObjectArray = getPunctuationDefinition(lang).filter( (def: any) => { return def['char'] === char})
     if (definitionObjectArray.length === 0) {
       return false
     }
@@ -297,7 +297,7 @@ export class Punctuation {
    * @return {boolean}
    */
   static sticksToNext(char: string, lang: string): boolean {
-    let definitionObjectArray = getPunctuationDefinition(lang).filter( (def: any) => { return def['char'] === char})
+    const definitionObjectArray = getPunctuationDefinition(lang).filter( (def: any) => { return def['char'] === char})
     if (definitionObjectArray.length === 0) {
       return false
     }
@@ -306,11 +306,11 @@ export class Punctuation {
 
 }
 
-let punctuationDefinitionsPerLanguage: any = {}
+const punctuationDefinitionsPerLanguage: any = {}
 const defaultLangKey = 'default'
 
 function getPunctuationDefinition(lang = '') {
-  let langKey = lang === '' ? defaultLangKey : lang
+  const langKey = lang === '' ? defaultLangKey : lang
 
   if (punctuationDefinitionsPerLanguage[langKey] !== undefined) {
     // return cached definitions object

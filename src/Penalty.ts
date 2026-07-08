@@ -124,7 +124,7 @@ export class Penalty extends TypesetterItem {
   }
 
   getExportObject() {
-    let obj = super.getExportObject();
+    const obj = super.getExportObject();
     obj.class = 'Penalty';
     // including non-zero widths and heights
     // just in case a hypothetical descendant

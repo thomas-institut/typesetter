@@ -66,14 +66,14 @@ export class TypesetterDocument extends TypesetterObject {
       this.height = 0;
     } else {
       // for the moment, just copy from the first page
-      let firstPage = this.getPage(0);
+      const firstPage = this.getPage(0);
       this.width = firstPage.getWidth();
       this.height = firstPage.getHeight();
     }
   }
 
   getExportObject() {
-    let obj = super.getExportObject();
+    const obj = super.getExportObject();
     obj.class = 'TypesetterDocument';
     obj.width = this.width;
     obj.height = this.height;
@@ -90,7 +90,7 @@ export class TypesetterDocument extends TypesetterObject {
     if (object['pages'] !== undefined && Array.isArray(object['pages'])) {
       this.pages = [];
       object['pages'].forEach((pageObject, i) => {
-        let newPage = ObjectFactory.fromObject(pageObject);
+        const newPage = ObjectFactory.fromObject(pageObject);
         if (newPage instanceof TypesetterPage) {
           this.pages.push(newPage);
         } else {

@@ -20,7 +20,7 @@ export class LineBreaker {
    */
   static breakIntoLines(itemArray: TypesetterItem[], _lineWidth: number, _textBoxMeasurer: TextBoxMeasurer, _bidiOrderInfoArray: BidiOrderInfo[]): Promise<ItemList[]> {
     // do nothing
-    let theList = new ItemList();
+    const theList = new ItemList();
     theList.setList(itemArray);
     return Promise.resolve([theList]);
   }

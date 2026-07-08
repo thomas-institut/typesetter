@@ -159,7 +159,7 @@ export class TypesetterItem extends TypesetterObject {
   }
 
   getExportObject() {
-    let obj = super.getExportObject();
+    const obj = super.getExportObject();
     obj.class = 'TypesetterItem';
     if (this.width !== -1) {
       obj.width = this.width;
@@ -180,9 +180,10 @@ export class TypesetterItem extends TypesetterObject {
       obj.textDirection = this.textDirection;
     }
     return obj;
+
   }
 
-  setFromObject(object: any, mergeValues: boolean): this {
+  setFromObject(object: Record<string, any>, mergeValues: boolean): this {
     super.setFromObject(object, mergeValues);
     const template = {
       width: -1, height: -1, shiftX: 0, shiftY: 0, direction: TypesetterItemDirection.UndefinedItemDirection, textDirection: ''

@@ -19,18 +19,18 @@ const multipleFontConvDef: FontConversionDefinition[] =[
 
 describe('FontConversion', () =>{
   test('Non TextBox', () => {
-    let items = [ new Glue(), new Penalty(), new ItemList()]
+    const items = [ new Glue(), new Penalty(), new ItemList()]
     items.forEach( (item) => {
       expect(FontConversions.applyFontConversions(item, multipleFontConvDef), `Item ${item.constructor.name}`).toBe(item)
     })
   })
 
   test('Empty Match', () => {
-    let item = TextBoxFactory.simpleText('test')
-    let fontFamily = item.getFontFamily()
-    let fontWeight = item.getFontWeight()
-    let fontStyle = item.getFontStyle()
-    let convertedItem = FontConversions.applyFontConversions(item, emptyFontConversionsDef)
+    const item = TextBoxFactory.simpleText('test')
+    const fontFamily = item.getFontFamily()
+    const fontWeight = item.getFontWeight()
+    const fontStyle = item.getFontStyle()
+    const convertedItem = FontConversions.applyFontConversions(item, emptyFontConversionsDef)
     expect(convertedItem).toBeInstanceOf(TextBox)
     expect(convertedItem.getText()).toBe(item.getText())
     expect(convertedItem.getFontFamily()).toBe(fontFamily)
@@ -43,12 +43,12 @@ describe('FontConversion', () =>{
     const fakeBoldFont = 'BoldFont'
 
     // A matching item
-    let item = TextBoxFactory.simpleText('test', { fontFamily: testFont, fontWeight: 'bold'})
-    let fontConvDef = { from: {fontWeight: 'bold'}, to: { fontFamily: fakeBoldFont, fontWeight: ''}}
-    let fontStyle = item.getFontStyle()
-    let defArray = arrayCopy(multipleFontConvDef)
+    const item = TextBoxFactory.simpleText('test', { fontFamily: testFont, fontWeight: 'bold'})
+    const fontConvDef = { from: {fontWeight: 'bold'}, to: { fontFamily: fakeBoldFont, fontWeight: ''}}
+    const fontStyle = item.getFontStyle()
+    const defArray = arrayCopy(multipleFontConvDef)
     defArray.push(fontConvDef)
-    let convertedItem = FontConversions.applyFontConversions(item, defArray)
+    const convertedItem = FontConversions.applyFontConversions(item, defArray)
     expect(convertedItem).toBeInstanceOf(TextBox)
     expect(convertedItem.getText()).toBe(item.getText())
     expect(convertedItem.getFontFamily()).toBe(fakeBoldFont)
@@ -56,8 +56,8 @@ describe('FontConversion', () =>{
     expect(convertedItem.getFontStyle()).toBe(fontStyle)
 
     // an item that does not match!
-    let item2 = TextBoxFactory.simpleText('test', { fontFamily: testFont, fontWeight: ''})
-    let convertedItem2 = FontConversions.applyFontConversions(item2, [ fontConvDef])
+    const item2 = TextBoxFactory.simpleText('test', { fontFamily: testFont, fontWeight: ''})
+    const convertedItem2 = FontConversions.applyFontConversions(item2, [ fontConvDef])
     expect(convertedItem2.getText()).toBe(item.getText())
     expect(convertedItem2.getFontFamily()).toBe(testFont)
     expect(convertedItem2.getFontWeight()).toBe('')
@@ -65,12 +65,12 @@ describe('FontConversion', () =>{
   })
 
   test( 'Arabic Text', () => {
-    let arabicFont = 'Amiri'
-    let fontConvDef = { from: {script: 'ar'}, to: { fontFamily: arabicFont}}
-    let defArray = arrayCopy(multipleFontConvDef)
+    const arabicFont = 'Amiri'
+    const fontConvDef = { from: {script: 'ar'}, to: { fontFamily: arabicFont}}
+    const defArray = arrayCopy(multipleFontConvDef)
     defArray.push(fontConvDef)
 
-    let arabicItem = TextBoxFactory.simpleText('يشسي.', {fontWeight: 'bold'})
+    const arabicItem = TextBoxFactory.simpleText('يشسي.', {fontWeight: 'bold'})
     let text = arabicItem.getText()
     let convertedItem = FontConversions.applyFontConversions(arabicItem, defArray)
     expect(convertedItem.getText()).toBe(text)
@@ -99,69 +99,69 @@ describe('FontConversion', () =>{
   })
 
   test( 'Hebrew Text', () => {
-    let hebrewFont = 'SBL Hebrew'
-    let fontConvDef = { from: {script: 'he'}, to: { fontFamily: hebrewFont, fontSizeFactor: 1.2}}
-    let defArray = [fontConvDef]
+    const hebrewFont = 'SBL Hebrew'
+    const fontConvDef = { from: {script: 'he'}, to: { fontFamily: hebrewFont, fontSizeFactor: 1.2}}
+    const defArray = [fontConvDef]
 
-    let hebrewItem = TextBoxFactory.simpleText('שלום')
-    let originalSize = hebrewItem.getFontSize()
-    let convertedItem = FontConversions.applyFontConversions(hebrewItem, defArray)
+    const hebrewItem = TextBoxFactory.simpleText('שלום')
+    const originalSize = hebrewItem.getFontSize()
+    const convertedItem = FontConversions.applyFontConversions(hebrewItem, defArray)
     expect(convertedItem.getFontFamily()).toBe(hebrewFont)
     expect(convertedItem.getFontSize()).toBe(originalSize * 1.2)
   })
 
   test( 'Greek Text', () => {
-    let greekFont = 'Gentium'
-    let fontConvDef = { from: {script: 'el'}, to: { fontFamily: greekFont}}
-    let defArray = [fontConvDef]
+    const greekFont = 'Gentium'
+    const fontConvDef = { from: {script: 'el'}, to: { fontFamily: greekFont}}
+    const defArray = [fontConvDef]
 
-    let greekItem = TextBoxFactory.simpleText('λόγος')
-    let convertedItem = FontConversions.applyFontConversions(greekItem, defArray)
+    const greekItem = TextBoxFactory.simpleText('λόγος')
+    const convertedItem = FontConversions.applyFontConversions(greekItem, defArray)
     expect(convertedItem.getFontFamily()).toBe(greekFont)
   })
 
   test( 'Latin Text', () => {
-    let latinFont = 'Garamond'
-    let fontConvDef = { from: {script: 'la'}, to: { fontFamily: latinFont}}
-    let defArray = [fontConvDef]
+    const latinFont = 'Garamond'
+    const fontConvDef = { from: {script: 'la'}, to: { fontFamily: latinFont}}
+    const defArray = [fontConvDef]
 
-    let latinItem = TextBoxFactory.simpleText('latin')
+    const latinItem = TextBoxFactory.simpleText('latin')
     let convertedItem = FontConversions.applyFontConversions(latinItem, defArray)
     expect(convertedItem.getFontFamily()).toBe(latinFont)
 
     // Negative tests: Hebrew text should NOT be converted
-    let hebrewItem = TextBoxFactory.simpleText('שלום')
+    const hebrewItem = TextBoxFactory.simpleText('שלום')
     let originalFont = hebrewItem.getFontFamily()
     convertedItem = FontConversions.applyFontConversions(hebrewItem, defArray)
     expect(convertedItem.getFontFamily()).toBe(originalFont)
 
-    let hebrewPunctItem = TextBoxFactory.simpleText('ב”הסתעפות“')
+    const hebrewPunctItem = TextBoxFactory.simpleText('ב”הסתעפות“')
     originalFont = hebrewPunctItem.getFontFamily()
     convertedItem = FontConversions.applyFontConversions(hebrewPunctItem, defArray)
     expect(convertedItem.getFontFamily()).toBe(originalFont)
   })
 
   test( 'Multiple Script Rules', () => {
-    let defs = [
+    const defs = [
       { from: { script: 'ar' }, to: { fontFamily: 'Amiri' } },
       { from: { script: 'he' }, to: { fontFamily: 'SBL Hebrew' } },
       { from: { script: 'la' }, to: { fontFamily: 'Garamond' } }
     ]
 
-    let arabicItem = TextBoxFactory.simpleText('يشسي')
+    const arabicItem = TextBoxFactory.simpleText('يشسي')
     expect(FontConversions.applyFontConversions(arabicItem, defs).getFontFamily()).toBe('Amiri')
 
-    let hebrewItem = TextBoxFactory.simpleText('שלום')
+    const hebrewItem = TextBoxFactory.simpleText('שלום')
     expect(FontConversions.applyFontConversions(hebrewItem, defs).getFontFamily()).toBe('SBL Hebrew')
 
-    let latinItem = TextBoxFactory.simpleText('latin')
+    const latinItem = TextBoxFactory.simpleText('latin')
     expect(FontConversions.applyFontConversions(latinItem, defs).getFontFamily()).toBe('Garamond')
   })
 })
 
 
-function arrayCopy(array: any[]) {
-  let newArray: any[] = []
+function arrayCopy<T>(array: T[]) {
+  const newArray: T[] = []
   array.forEach( (e) => { newArray.push(e)})
   return newArray
 }

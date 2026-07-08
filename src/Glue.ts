@@ -85,7 +85,7 @@ export class Glue extends TypesetterItem {
   }
 
   getExportObject() {
-    let obj = super.getExportObject();
+    const obj = super.getExportObject();
     obj.class = 'Glue';
     obj.stretch = this.stretch;
     obj.shrink = this.shrink;
@@ -95,7 +95,7 @@ export class Glue extends TypesetterItem {
 
   // Factory methods
 
-  setFromObject(object: any, mergeValues: boolean) {
+  setFromObject(object: Record<string, never>, mergeValues: boolean) {
     super.setFromObject(object, mergeValues);
     // repeating width and height in the template so that they default to 0, not to -1 as in TypesetterItem
     const template = {width: 0, height: 0, stretch: 0, shrink: 0};

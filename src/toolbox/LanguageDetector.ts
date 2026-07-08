@@ -1,12 +1,13 @@
 import {isNumeric, isWhiteSpace} from './Util.js'
 
-const punctuationRegex = /[.,:;\]\['()“”"«»‘’]/gi
+const punctuationRegex = /[.,-:–;—\]['()“”"«»‘’]/gi
 const latinScriptNumberRegex = /[0-9]/gi
 
 // Based on http://www.unicode.org/Public/UNIDATA/extracted/DerivedBidiClass.txt
 // const ltrRegex = /[\u0041-\u005a\u0061-\u007a\u00aa\u00b5\u00ba\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u02b8\u02bb-\u02c1]/gi
 
-const regexes = {
+const regexes: Record<Script, RegExp> = {
+    // eslint-disable-next-line no-control-regex
     'la': /[\u0000-\u007F]/gi,
     'el': /[\u0370-\u03ff\u1f00-\u1fff]/gi,
     // 'zh': /[\u3000\u3400-\u4DBF\u4E00-\u9FFF]/gi,
@@ -17,6 +18,7 @@ const regexes = {
 }
 
 type DetectedTextDirection = 'ltr' | 'rtl' | 'en' | '';
+export type Script = 'la' | 'el' | 'ar' | 'he';
 
 export class LanguageDetector {
     private readonly defaultLang: string;
@@ -33,9 +35,7 @@ export class LanguageDetector {
      * @param word
      */
     detectTextDirection(word: string): DetectedTextDirection {
-        let debug = false
 
-        debug && console.log(`Detecting text direction for '${word}'`)
         // 1. Is it whitespace?
         if (isWhiteSpace(word)) {
             return ''
@@ -83,18 +83,16 @@ export class LanguageDetector {
             // but it's still a neutral, so it's not an error
             return ''
         }
-        let stringToTest = word.substring(firstNonStartingNeutral, lastNonNeutral + 1)
+        const stringToTest = word.substring(firstNonStartingNeutral, lastNonNeutral + 1)
         // console.log(`Testing for numeric string: '${stringToTest}'`)
         if (isNumeric(stringToTest)) {
             return 'en'
         }
 
-        debug && console.log(` Not a number and not all neutrals, detecting language for non-neutral substring '${stringToTest}'´`)
+        
 
         // 3. Is it Arabic or Hebrew?
-        let lang = this.detectLang(stringToTest)
-
-        debug && console.log(` ...language is '${lang}'`)
+        const lang = this.detectLang(stringToTest)
         if (lang === 'ar' || lang === 'he') {
             return 'rtl'
         }
@@ -103,17 +101,18 @@ export class LanguageDetector {
         return 'ltr'
     }
 
-    detectScript(text: string, ignorePunctuation = true): string {
+    detectScript(text: string, ignorePunctuation = true): Script | null {
         const textWithoutNeutrals = text.replace(punctuationRegex, '').replace(latinScriptNumberRegex, '').replace(/\s/g, '');
         if (textWithoutNeutrals.length === 0) {
-            return ''
+            return null;
         }
+
 
         for (const [lang, regex] of Object.entries(regexes)) {
             const textToTest = ignorePunctuation ? textWithoutNeutrals : text;
             const matches = textToTest.match(regex) || []
             if (matches.length === textToTest.length) {
-                return lang
+                return lang as Script
             }
         }
         // no match, so it should be latin script
@@ -129,7 +128,6 @@ export class LanguageDetector {
      * @return {string}
      */
     detectLang(text: string): string {
-        let debug = false;
         const textWithoutNeutrals = text.replace(punctuationRegex, '').replace(latinScriptNumberRegex, '').replace(/\s/g, '');
         if (textWithoutNeutrals.length === 0) {
             return this.defaultLang;
@@ -142,9 +140,8 @@ export class LanguageDetector {
 
         for (const [lang, regex] of Object.entries(regexes)) {
             // detect occurrences of lang in a word
-            let matches = textWithoutNeutrals.match(regex) || []
-            let numMatches = matches.length
-            debug && console.log(`Num matches for '${text}', lang '${lang}' = ${numMatches}`)
+            const matches = textWithoutNeutrals.match(regex) || []
+            const numMatches = matches.length
 
             // if (lang === 'la') {
             //     // do not include numbers in the total for latin
@@ -156,7 +153,7 @@ export class LanguageDetector {
             //     debug && console.log(`Adjusted default lang num matches for '${text}', lang '${lang}' = ${numMatches}`)
             // }
 
-            let score = numMatches / text.length
+            const score = numMatches / text.length
 
             if (score) {
                 // high-percentage, return result
@@ -167,8 +164,6 @@ export class LanguageDetector {
             }
         }
 
-        debug && console.log(`Scores:`)
-        debug && console.log(scores)
         // not detected
         if (Object.keys(scores).length === 0)
             return this.defaultLang

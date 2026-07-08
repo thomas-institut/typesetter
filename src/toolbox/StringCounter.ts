@@ -33,7 +33,7 @@ export class StringCounter {
     }
 
     addString(someString: string) {
-        let index = this.getStringIndex(someString)
+        const index = this.getStringIndex(someString)
         if (index === -1) {
             // new string
             this.theCounters.push(new IndividualStringCounter(someString) )
@@ -43,7 +43,7 @@ export class StringCounter {
     }
 
     getCount(someString: string) {
-        let index = this.getStringIndex(someString)
+        const index = this.getStringIndex(someString)
         if (index === -1) {
             return 0
         }

@@ -27,14 +27,14 @@ export function deepGetValuesForKey(someVariable: any, key: string): any[] {
   }
   // ARRAY
   if (Array.isArray(someVariable)) {
-    let values: any[] = [];
+    const values: any[] = [];
     someVariable.forEach((element) => {
       values.push(...deepGetValuesForKey(element, key));
     });
     return values;
   }
   // OBJECT
-  let values: any[] = [];
+  const values: any[] = [];
   Object.keys(someVariable).forEach((objectKey) => {
     if (objectKey === key) {
       values.push(someVariable[key]);

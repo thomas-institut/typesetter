@@ -18,7 +18,7 @@
 
 import {Box} from './Box.js';
 import * as TypesetterItemDirection from './TypesetterItemDirection.js';
-import {HyphenationLanguage} from "./Hyphenator/Hyphenator.js";
+import {HyphenationLanguage} from "@/Hyphenator";
 
 const defaultFontFamily = 'FreeSerif';
 const defaultFontSize = 16;
@@ -171,7 +171,7 @@ export class TextBox extends Box {
   }
 
   getExportObject() {
-    let obj = super.getExportObject();
+    const obj = super.getExportObject();
     obj.class = 'TextBox';
     obj.text = this.text;
     obj.fontFamily = this.fontFamily;

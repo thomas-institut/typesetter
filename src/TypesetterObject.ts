@@ -32,7 +32,7 @@ export class TypesetterObject {
    * @return {{[key:string]: any}}
    */
   getExportObject(): { [key: string]: any; } {
-    let obj: { [key: string]: any } = {class: 'TypesetterObject'};
+    const obj: { [key: string]: any } = {class: 'TypesetterObject'};
     if (Object.keys(this.metadata).length !== 0) {
       obj.metadata = this.metadata;
     }
@@ -46,11 +46,11 @@ export class TypesetterObject {
    * @param {{[key:string]: any}}object
    * @param {boolean}mergeValues
    */
-  setFromObject(object: any, mergeValues: boolean): this {
+  setFromObject(object: Record<string, any>, mergeValues: boolean): this {
     if (!mergeValues) {
       this.metadata = {};
     }
-    if (object['metadata'] !== undefined && typeof object['metadata'] === 'object' && !Array.isArray(object['metadata'])) {
+    if (object['metadata'] !== undefined && object.metadata !== null && typeof object['metadata'] === 'object' && !Array.isArray(object['metadata'])) {
       Object.keys(object['metadata']).forEach((key) => {
         this.addMetadata(key, object['metadata'][key]);
       });
@@ -85,7 +85,7 @@ export class TypesetterObject {
   protected copyValues(template: { [key: string]: any; }, inputObject: { [key: string]: any; }, mergeValues: boolean) {
     Object.keys(template).forEach((key) => {
       // @ts-ignore
-      let defaultValue = mergeValues ? this[key] : template[key];
+      const defaultValue = mergeValues ? this[key] : template[key];
       // @ts-ignore
       this[key] = inputObject[key] !== undefined ? inputObject[key] : defaultValue;
     });

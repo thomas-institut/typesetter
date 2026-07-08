@@ -55,7 +55,7 @@ export class CanvasRenderer extends TypesetterRenderer {
     let maxPageWidth = 0;
     let canvasHeight = this.pageMargin;
     doc.getPages().forEach((page) => {
-      let [pageWidth, pageHeight] = this.getDeviceCoordinates(page.getWidth(), page.getHeight());
+      const [pageWidth, pageHeight] = this.getDeviceCoordinates(page.getWidth(), page.getHeight());
       maxPageWidth = Math.max(maxPageWidth, pageWidth);
       canvasHeight += pageHeight + this.pageMargin;
     });
@@ -69,18 +69,18 @@ export class CanvasRenderer extends TypesetterRenderer {
     }
     let text = textBoxItem.getText();
     // hack to work around Firefox's bug with single RTL brackets
-    let brackets = ['[', ']', '(', ')', '{', '}', '«', '»', '<', '>'];
+    const brackets = ['[', ']', '(', ')', '{', '}', '«', '»', '<', '>'];
     if (brackets.indexOf(text) !== -1 && textBoxItem.getTextDirection() === 'rtl') {
       // insert an RTL marker before the text to force correct display
       text = String.fromCodePoint(0x202B) + text;
     }
-    let [shiftX, shiftY] = this.getDeviceCoordinates(textBoxItem.getShiftX(), textBoxItem.getShiftY());
-    let [, textBoxHeight] = this.getDeviceCoordinates(0, textBoxItem.getHeight());
-    let [, fontSize] = this.getDeviceCoordinates(0, textBoxItem.getFontSize());
-    let fontWeight = textBoxItem.getFontWeight() === '' ? 'normal' : textBoxItem.getFontWeight();
-    let fontStyle = textBoxItem.getFontStyle() === '' ? 'normal' : textBoxItem.getFontStyle();
-    let fontVariant = 'normal';
-    let currentCanvasDirection = this.ctx.direction;
+    const [shiftX, shiftY] = this.getDeviceCoordinates(textBoxItem.getShiftX(), textBoxItem.getShiftY());
+    const [, textBoxHeight] = this.getDeviceCoordinates(0, textBoxItem.getHeight());
+    const [, fontSize] = this.getDeviceCoordinates(0, textBoxItem.getFontSize());
+    const fontWeight = textBoxItem.getFontWeight() === '' ? 'normal' : textBoxItem.getFontWeight();
+    const fontStyle = textBoxItem.getFontStyle() === '' ? 'normal' : textBoxItem.getFontStyle();
+    const fontVariant = 'normal';
+    const currentCanvasDirection = this.ctx.direction;
     if (textBoxItem.getTextDirection() !== '') {
       this.ctx.direction = textBoxItem.getTextDirection() as CanvasDirection;
       // debug && console.log(`Setting canvas direction to ${this.ctx.direction}, default is ${currentCanvasDirection}`)
@@ -103,7 +103,7 @@ export class CanvasRenderer extends TypesetterRenderer {
     let currentY = this.pageMargin;
     doc.getPages().forEach((page) => {
       this.pagePositions.push([this.pageMargin, currentY]);
-      let [, pageHeight] = this.getDeviceCoordinates(page.getWidth(), page.getHeight());
+      const [, pageHeight] = this.getDeviceCoordinates(page.getWidth(), page.getHeight());
       currentY += pageHeight + this.pageMargin;
     });
   }
@@ -112,7 +112,7 @@ export class CanvasRenderer extends TypesetterRenderer {
     if (this.ctx === null) {
       return;
     }
-    let [pageWidth, pageHeight] = this.getDeviceCoordinates(page.getWidth(), page.getHeight());
+    const [pageWidth, pageHeight] = this.getDeviceCoordinates(page.getWidth(), page.getHeight());
     this.ctx.fillStyle = "#FFFFFF";
     this.ctx.fillRect(this.pagePositions[pageIndex][0], this.pagePositions[pageIndex][1], pageWidth, pageHeight);
   }

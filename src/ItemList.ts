@@ -124,7 +124,7 @@ export class ItemList extends TypesetterItem {
    */
   getText(): string {
 
-    let textArray = this.getList().map((item) => {
+    const textArray = this.getList().map((item) => {
       if (item instanceof Glue) {
         return ' ';
       }
@@ -143,7 +143,7 @@ export class ItemList extends TypesetterItem {
   }
 
   getExportObject() {
-    let obj = super.getExportObject();
+    const obj = super.getExportObject();
     obj.class = 'ItemList';
     obj.list = this.list.map((item) => {
       return item.getExportObject();
@@ -156,7 +156,7 @@ export class ItemList extends TypesetterItem {
     if (object['list'] !== undefined && Array.isArray(object['list'])) {
       this.list = [];
       object['list'].forEach((itemObject, i) => {
-        let newItem = ObjectFactory.fromObject(itemObject);
+        const newItem = ObjectFactory.fromObject(itemObject);
         if (newItem instanceof TypesetterItem) {
           this.pushItem(newItem);
         } else {

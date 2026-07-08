@@ -65,12 +65,12 @@ describe('LanguageDetector', () => {
     })
 
     describe('detectScript', () => {
-        it('should return empty string for only punctuation and numbers (0-9)', () => {
-            expect(detector.detectScript('123')).toBe('')
-            expect(detector.detectScript('123.')).toBe('')
-            expect(detector.detectScript('...')).toBe('')
-            expect(detector.detectScript('(123)')).toBe('')
-            expect(detector.detectScript('1. 2, 3')).toBe('')
+        it('should return null for only punctuation and numbers (0-9)', () => {
+            expect(detector.detectScript('123')).toBe(null)
+            expect(detector.detectScript('123.')).toBe(null)
+            expect(detector.detectScript('...')).toBe(null)
+            expect(detector.detectScript('(123)')).toBe(null)
+            expect(detector.detectScript('1. 2, 3')).toBe(null)
         })
 
         it('should detect Latin script', () => {
@@ -121,7 +121,7 @@ describe('LanguageDetector', () => {
         })
 
         it('should correctly handle Hebrew strings with neutral characters', () => {
-            const cases = ['ב”הסתעפות“', 'ב’הסתעפות‘',  'ב:ג', '[הוורידים]']
+            const cases = ['ב”הסתעפות“', 'ב’הסתעפות‘', 'ב:ג', '[הוורידים]']
             for (const text of cases) {
                 expect(detector.detectLang(text), `Testing '${text}'`).toBe('he')
                 expect(detector.detectScript(text), `Testing '${text}'`).toBe('he')
@@ -129,11 +129,11 @@ describe('LanguageDetector', () => {
             }
         });
 
-        it('should correctly handle Hebrew strings with numbers ', () => {
-            const cases = ['994ב32', '994ב']
+        it('should correctly handle Hebrew strings with numbers', () => {
+            const cases = ['994ב32', '994ב', ' 994ב32–995א14']
             for (const text of cases) {
-                expect(detector.detectLang(text)).toBe('he')
-                expect(detector.detectScript(text)).toBe('he')
+                expect(detector.detectLang(text), `Testing '${text}'`).toBe('he')
+                expect(detector.detectScript(text), `Testing '${text}'`).toBe('he')
                 expect(detector.detectTextDirection(text), `Testing '${text}'`).toBe('en')
             }
         });

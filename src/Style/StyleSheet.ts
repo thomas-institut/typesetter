@@ -150,7 +150,7 @@ export class StyleSheet {
   }
 
   getStrings(style = 'default') {
-    let defaultStrings = this.getStyleDef(style).strings;
+    const defaultStrings = this.getStyleDef(style).strings;
     return defaultStrings === undefined ? {} : defaultStrings;
   }
 
@@ -187,7 +187,7 @@ export class StyleSheet {
   __updateStyle(styleName: string, styleDef: StyleDef) {
     if (this.styleExists(styleName)) {
       // merge
-      let currentDef = this.getStyleDef(styleName);
+      const currentDef = this.getStyleDef(styleName);
       if (styleDef.parent !== undefined) {
         currentDef.parent = styleDef.parent;
       }
@@ -211,13 +211,13 @@ export class StyleSheet {
         stylesToApply = ['default'];
       }
 
-      let styleDefs = stylesToApply.map((styleName) => {
+      const styleDefs = stylesToApply.map((styleName) => {
         return this.getStyleDef(styleName);
       });
       let baseTextBox = new TextBox();
 
       for (let i = 0; i < styleDefs.length; i++) {
-        let styleDef = styleDefs[i];
+        const styleDef = styleDefs[i];
         if (item instanceof Glue) {
           [item as Glue, baseTextBox] = await this.applyStyleToGlue(item, styleDef, baseTextBox);
         } else if (item instanceof TextBox) {
@@ -227,7 +227,7 @@ export class StyleSheet {
       // Special characters that need specific font conversions
       if (item instanceof TextBox) {
         for (let i = 0; i < this.specialStrings.length; i++) {
-          let specialString = this.specialStrings[i];
+          const specialString = this.specialStrings[i];
           if (item.getText() === specialString.string) {
             item.setFontFamily(specialString.fontFamily);
             break;
@@ -252,17 +252,17 @@ export class StyleSheet {
       baseTextBox = await this.applyStyleToTextBox(baseTextBox, styleDef);
       if (styleDef.glue !== undefined) {
         // then set the glue
-        let glueDef = styleDef.glue;
+        const glueDef = styleDef.glue;
         if (glueDef.width !== undefined && glueDef.width !== '') {
-          let pixelValue = Dimension.getPixelValue(glueDef.width, baseTextBox.getFontSize());
+          const pixelValue = Dimension.getPixelValue(glueDef.width, baseTextBox.getFontSize());
           glueItem.setWidth(pixelValue);
         }
         if (glueDef.stretch !== undefined && glueDef.stretch !== '') {
-          let pixelValue = Dimension.getPixelValue(glueDef.stretch, baseTextBox.getFontSize());
+          const pixelValue = Dimension.getPixelValue(glueDef.stretch, baseTextBox.getFontSize());
           glueItem.setStretch(pixelValue);
         }
         if (glueDef.shrink !== undefined && glueDef.shrink !== '') {
-          let pixelValue = Dimension.getPixelValue(glueDef.shrink, baseTextBox.getFontSize());
+          const pixelValue = Dimension.getPixelValue(glueDef.shrink, baseTextBox.getFontSize());
           glueItem.setShrink(pixelValue);
         }
       }
@@ -282,7 +282,7 @@ export class StyleSheet {
       // this.debug && console.log(styleDef)
       // this.debug && console.log(textBox)
       if (styleDef.text !== undefined) {
-        let fontDef = styleDef.text;
+        const fontDef = styleDef.text;
         if (fontDef.fontFamily !== undefined && fontDef.fontFamily !== '') {
           textBox.setFontFamily(fontDef.fontFamily);
         }
@@ -296,11 +296,11 @@ export class StyleSheet {
           if (textBox.getText() === 'scripts') {
             console.log(`Changing font size text box, current font size = ${textBox.getFontSize()}`);
           }
-          let newFontSize = Dimension.getPixelValue(fontDef.fontSize, textBox.getFontSize());
+          const newFontSize = Dimension.getPixelValue(fontDef.fontSize, textBox.getFontSize());
           textBox.setFontSize(newFontSize);
         }
         if (fontDef.shiftY !== undefined && fontDef.shiftY !== '') {
-          let newShiftY = Dimension.getPixelValue(fontDef.shiftY, textBox.getFontSize());
+          const newShiftY = Dimension.getPixelValue(fontDef.shiftY, textBox.getFontSize());
           textBox.setShiftY(newShiftY);
         }
       }
@@ -311,9 +311,9 @@ export class StyleSheet {
   __getStyleAncestryLine(styleName: string): string[] {
     let line = [styleName];
 
-    let styleDef = this.getStyleDef(styleName);
+    const styleDef = this.getStyleDef(styleName);
     if (styleDef !== undefined && styleDef.parent !== undefined && styleDef.parent !== '') {
-      let parentAncestry = this.__getStyleAncestryLine(styleDef.parent);
+      const parentAncestry = this.__getStyleAncestryLine(styleDef.parent);
       line = parentAncestry.concat(line);
     }
     return line;
@@ -349,14 +349,14 @@ export class StyleSheet {
       }
       // this.debug && console.log(`Getting paragraph style, styles to apply:`)
       // this.debug && console.log(stylesToApply)
-      let styleDefs = stylesToApply.map((styleName) => {
+      const styleDefs = stylesToApply.map((styleName) => {
         return this.getStyleDef(styleName);
       });
       // this.debug && console.log(styleDefs)
       let baseTextBox = new TextBox();
       let paragraphStyle: ParagraphStyleDef = {};
       for (let i = 0; i < styleDefs.length; i++) {
-        let styleDef = styleDefs[i];
+        const styleDef = styleDefs[i];
         if (styleDef === undefined) {
           console.warn(`Undefined style found '${stylesToApply[i]}'`);
           continue;
@@ -374,10 +374,10 @@ export class StyleSheet {
       baseTextBox = await this.applyStyleToTextBox(baseTextBox, styleDef);
       if (styleDef.paragraph !== undefined) {
         // then set the glue
-        let parDef = styleDef.paragraph;
-        let dimensionFields = ['lineSkip', 'indent', 'spaceBefore', 'spaceAfter'];
+        const parDef = styleDef.paragraph;
+        const dimensionFields = ['lineSkip', 'indent', 'spaceBefore', 'spaceAfter'];
         for (let i = 0; i < dimensionFields.length; i++) {
-          let field = dimensionFields[i];
+          const field = dimensionFields[i];
           // @ts-expect-error Using def as object
           if (parDef[field] !== undefined && parDef[field] !== '') {
             // @ts-expect-error Using def as object
@@ -396,7 +396,7 @@ export class StyleSheet {
   }
 
   private mergeObjects(objA: { [key: string]: any }, objB: { [key: string]: any }) {
-    let newObject: { [key: string]: any } = {};
+    const newObject: { [key: string]: any } = {};
     // first, copy all keys defined in objA
     if (objA !== undefined) {
       Object.keys(objA).forEach((key) => {
@@ -425,8 +425,8 @@ export class StyleSheet {
     }
     //this.debug && console.log(`Style string: '${styleString}'`)
 
-    let styleArray = styleString.split(' ').filter((styleName) => {
-      let styleExists = this.styleExists(styleName);
+    const styleArray = styleString.split(' ').filter((styleName) => {
+      const styleExists = this.styleExists(styleName);
       if (!styleExists) {
         console.warn(`Style '${styleName}' does not exist`);
       }

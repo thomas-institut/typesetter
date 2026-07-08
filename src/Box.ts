@@ -36,7 +36,7 @@ export class Box extends TypesetterItem {
   }
 
   getExportObject() {
-    let obj = super.getExportObject();
+    const obj = super.getExportObject();
     obj.class = 'Box';
     return obj;
   }

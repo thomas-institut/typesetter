@@ -13,7 +13,7 @@ interface TestCase {
 }
 describe('Bidi Display Order', () => {
   test('Unidirectional Strings', () => {
-    let testCases: TestCase[] = [
+    const testCases: TestCase[] = [
       {
         context:' Simple LTR text',
         testItems:  [ 'This', ' ', 'is', ' ', 'a', ' ', 'test', ' '],
@@ -35,7 +35,7 @@ describe('Bidi Display Order', () => {
 
   test('Bidirectional Strings', () => {
 
-    let testCases: TestCase[] = [
+    const testCases: TestCase[] = [
       {
         context:'Bidi text mostly LTR',
         testItems: [ 'New', ' ', 'car', ' ', 'is', ' ', 'SAYYYARA', ' ', 'YADIDA', ' ', 'in', ' ', 'Arabic'],
@@ -62,7 +62,7 @@ describe('Bidi Display Order', () => {
   })
 
   test('Strings with punctuation', () => {
-    let testCases: TestCase[] = [
+    const testCases: TestCase[] = [
       {
         context: 'Bidi text with punctuation',
         testItems: [ 'the', ' ', 'car', 'SAYYARA', ' ', 'YADIDA', ';', ' ', 'and', ' ', 'more'],
@@ -82,7 +82,7 @@ describe('Bidi Display Order', () => {
   })
 
   test('Strings with brackets', () => {
-    let testCases: TestCase[] = [
+    const testCases: TestCase[] = [
       {
         context: 'Bidi text with brackets LTR (simple)',
         testItems: [ 'the', ' ', '(', 'car', ',', ' ', 'SAYYARA', ')', ' ', 'and', ' ', 'more'],
@@ -118,7 +118,7 @@ describe('Bidi Display Order', () => {
 
 function doTestCases(testCaseArray: TestCase[], getItemIntrinsicTextDirection: (s: string) => IntrinsicTextDirection) {
   testCaseArray.forEach( (testCase) => {
-    let result = BidiDisplayOrder.getDisplayOrder(testCase.testItems, testCase.defaultTextDirection, getItemIntrinsicTextDirection )
+    const result = BidiDisplayOrder.getDisplayOrder(testCase.testItems, testCase.defaultTextDirection, getItemIntrinsicTextDirection )
     expect(result, testCase.context).toHaveLength(testCase.testItems.length)
     expectResults(testCase.context, result, testCase.expectedOrder, testCase.expectedDirections)
   })
@@ -127,8 +127,8 @@ function doTestCases(testCaseArray: TestCase[], getItemIntrinsicTextDirection: (
 
 function expectResults(context: string, result: BidiOrderInfo[], expectedOrder: number[], expectedDirections: string[] ) {
   for(let i = 0; i < result.length; i++) {
-    let resultItem = result[i]
-    let itemContext = `${context}, result item ${i}`
+    const resultItem = result[i]
+    const itemContext = `${context}, result item ${i}`
     expect(resultItem.inputIndex,itemContext).toBe(expectedOrder[i])
     expect(resultItem.textDirection,itemContext).toBe(expectedDirections[i])
   }

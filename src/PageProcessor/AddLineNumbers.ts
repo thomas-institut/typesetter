@@ -74,8 +74,8 @@ export class AddLineNumbers extends PageProcessor {
       }
 
       /** @var {MainTextLineData}mainTextLineData */
-      let mainTextLineData = page.getMetadata(MetadataKey.MDK_MainTextLineData) as MainTextLineData;
-      let mainTextIndex = mainTextLineData.mainTextListIndex;
+      const mainTextLineData = page.getMetadata(MetadataKey.MDK_MainTextLineData) as MainTextLineData;
+      const mainTextIndex = mainTextLineData.mainTextListIndex;
       if (mainTextIndex === -1) {
         // no main text block, nothing to do
         resolve(page);
@@ -108,14 +108,14 @@ export class AddLineNumbers extends PageProcessor {
       }
 
       this.debug && console.log(`MainTextBlock at index ${mainTextIndex}`);
-      let mainTextList = page.getItems()[mainTextIndex];
+      const mainTextList = page.getItems()[mainTextIndex];
       // console.log(`mainTextList  (index ${mainTextIndex}`)
       // console.log(mainTextList)
       if (!(mainTextList instanceof ItemList)) {
         throw new Error(`Main text block at index ${mainTextIndex} is not an ItemList`);
       }
-      let mainTextListItems = mainTextList.getList();
-      let lineNumberList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
+      const mainTextListItems = mainTextList.getList();
+      const lineNumberList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
       lineNumberList
       .setShiftX(this.options.xPosition)
       .setShiftY(mainTextList.getShiftY())
@@ -124,30 +124,30 @@ export class AddLineNumbers extends PageProcessor {
       let previousLineHeight = 0;
       let previousY = 0;
       for (let i = 0; i < lineNumberData.length; i++) {
-        let dataItem = lineNumberData[i];
+        const dataItem = lineNumberData[i];
 
         // add inter-number glue
-        let glueHeight = dataItem.y - previousY - previousLineHeight + previousShiftYAdjustment;
+        const glueHeight = dataItem.y - previousY - previousLineHeight + previousShiftYAdjustment;
         if (glueHeight !== 0) {
-          let glue = new Glue(TypesetterItemDirection.VerticalItemDirection);
+          const glue = new Glue(TypesetterItemDirection.VerticalItemDirection);
           glue.setHeight(glueHeight);
           lineNumberList.pushItem(glue);
         }
 
-        let lineNumberTextBox = TextBoxFactory.simpleText(this.getLineNumberString(dataItem.lineNumberToShow), {
+        const lineNumberTextBox = TextBoxFactory.simpleText(this.getLineNumberString(dataItem.lineNumberToShow), {
           fontFamily: this.options.fontFamily, fontSize: this.options.fontSize
         });
         // the number may be RTL, but alignments are calculated assuming LTR box placement
         lineNumberTextBox.setTextDirection('ltr');
 
         if (this.options.align === 'right') {
-          let boxWidth = await this.options.textBoxMeasurer.getBoxWidth(lineNumberTextBox);
+          const boxWidth = await this.options.textBoxMeasurer.getBoxWidth(lineNumberTextBox);
           lineNumberTextBox.setShiftX(-boxWidth);
         }
 
-        let boxHeight = await this.options.textBoxMeasurer.getBoxHeight(lineNumberTextBox);
+        const boxHeight = await this.options.textBoxMeasurer.getBoxHeight(lineNumberTextBox);
         lineNumberTextBox.setHeight(boxHeight);
-        let lineHeight = mainTextListItems[dataItem.listIndex].getHeight();
+        const lineHeight = mainTextListItems[dataItem.listIndex].getHeight();
         if (boxHeight !== lineHeight) {
           lineNumberTextBox.setShiftY(lineHeight - boxHeight);
           previousShiftYAdjustment = lineHeight - boxHeight;

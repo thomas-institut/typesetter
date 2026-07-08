@@ -72,7 +72,7 @@ export class BidiDisplayOrder {
       // console.warn(`Detecting default text direction`)
       let detectedTextDirection = '';
       for (let i = 0; i < items.length; i++) {
-        let itd = getItemIntrinsicTextDirection(items[i]);
+        const itd = getItemIntrinsicTextDirection(items[i]);
         if (itd === 'ltr' || itd === 'rtl') {
           detectedTextDirection = itd;
           break;
@@ -87,13 +87,13 @@ export class BidiDisplayOrder {
     }
 
     // 1. Determine embedding levels
-    let bidiOrderInfoArray: BidiOrderInfo[] = [];
-    let defaultLevel = defaultTextDirection === 'ltr' ? 0 : 1;
+    const bidiOrderInfoArray: BidiOrderInfo[] = [];
+    const defaultLevel = defaultTextDirection === 'ltr' ? 0 : 1;
     let currentLevel = defaultLevel;
     let currentTextDirection = defaultTextDirection;
 
     items.forEach((item, index) => {
-      let bidiOrderInfo: BidiOrderInfo = {
+      const bidiOrderInfo: BidiOrderInfo = {
         inputIndex: -1,
         displayOrder: -1,
         intrinsicTextDirection: '',
@@ -136,9 +136,9 @@ export class BidiDisplayOrder {
       }
     });
     // get the items per level, reversing the ones in the reverse direction of the defaultTextDirection
-    let levelRuns: BidiOrderInfo[][] = [];
+    const levelRuns: BidiOrderInfo[][] = [];
     levelInfoArray.forEach((levelInfo) => {
-      let levelRun: BidiOrderInfo[] = [];
+      const levelRun: BidiOrderInfo[] = [];
       if ((defaultTextDirection === 'ltr' && levelInfo.level === 0) || (defaultTextDirection === 'rtl' && levelInfo.level === 1)) {
         for (let i = levelInfo.start; i <= levelInfo.end; i++) {
           levelRun.push(bidiOrderInfoArray[i]);

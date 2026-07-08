@@ -43,7 +43,7 @@ export class TextBoxFactory {
    * @return {TextBox}
    */
   static simpleText(text: string, fontSpec: FontDefinition = {}, textDirection: 'rtl' | 'ltr' | '' = ''): TextBox {
-    let item = new TextBox();
+    const item = new TextBox();
     item.setText(text);
 
     if (fontSpec.fontFamily !== undefined) {
@@ -70,7 +70,7 @@ export class TextBoxFactory {
   }
 
   static clone(textBox: TextBox): TextBox {
-    let item = new TextBox();
+    const item = new TextBox();
     item.setText(textBox.getText());
     item.setFontFamily(textBox.getFontFamily());
     item.setFontSize(textBox.getFontSize());
