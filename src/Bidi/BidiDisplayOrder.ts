@@ -41,15 +41,16 @@ export class BidiDisplayOrder {
    * The input to the algorithm is an array of textual items that are meant to represent a single paragraph of text
    * in logical order. The type of the items is irrelevant because the algorithm does not use their actual content.
    * The algorithm only cares about each item's intrinsic text direction. So, it needs a function
-   * getItemIntrinsicTextDirection(item[i]) that determines that information. When called on a single item, the
-   * function must return one of:
-   *   'en' : European numbers  (also for numerical strings such as '1.9' or '1,923,234.25')
-   *   'rtl' :  right to left text
-   *   'ltr' :  left to right text
-   *   '' : neutral text (e.g., whitespace and punctuation)
+   * getItemIntrinsicTextDirection(item[i]) that determines that information.
+   *
+   * When called on a single item, this function must return one of:
+   *   - 'en' : European numbers  (also for numerical strings such as '1.9' or '1,923,234.25')
+   *   - 'rtl' :  right to left text
+   *   - 'ltr' :  left to right text
+   *   - '' : neutral text (e.g., whitespace and punctuation)
    *
    * The algorithm also needs a default text direction for the paragraph ('ltr' or 'rtl'). If none is given
-   * it will the direction of the non-neutral, non-numeric item in the array.
+   * it will use the direction of the first non-neutral, non-numeric item in the array.
    *
    * The algorithm returns the text direction that must be used to display the item assuming
    * that the display mechanism will follow standard rules for display of bidirectional text within the item.

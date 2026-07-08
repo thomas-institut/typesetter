@@ -36,7 +36,7 @@ const neutralCharactersPattern = `[${neutralCharacters.map(escapeRegExpForCharac
 
 const regexes: Record<Script, RegExp> = {
   // eslint-disable-next-line no-control-regex
-  'la': /[\u0000-\u007F]/gi,
+  'la': /[\u0000-\u02AF]/gi,
   'el': /[\u0370-\u03ff\u1f00-\u1fff]/gi,
   // 'zh': /[\u3000\u3400-\u4DBF\u4E00-\u9FFF]/gi,
   // 'hi': /[\u0900-\u097F]/gi,

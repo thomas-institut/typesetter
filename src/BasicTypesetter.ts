@@ -1,5 +1,3 @@
-// noinspection ES6PreferShortImport
-
 /*
  *  Copyright (C) 2022-23 Universität zu Köln
  *
@@ -23,30 +21,30 @@ import * as TypesetterItemDirection from './TypesetterItemDirection.js';
 import {Glue} from './Glue.js';
 import {TextBox} from './TextBox.js';
 import {TypesetterPage} from './TypesetterPage.js';
-import {TextBoxMeasurer} from './TextBoxMeasurer/TextBoxMeasurer.js';
+import {TextBoxMeasurer} from '@/TextBoxMeasurer';
 import {TypesetterDocument} from './TypesetterDocument.js';
 import * as MetadataKey from './MetadataKey.js';
 import {OriginalText, SplitInSyllablesItem, SyllableIndex} from './MetadataKey.js';
 import * as ListType from './ListType.js';
 import * as LineType from './LineType.js';
 import * as GlueType from './GlueType.js';
-import {FirstFitLineBreaker, ItemArrayWithBidiOrderInfo} from './LineBreaker/FirstFitLineBreaker.js';
-import {AddPageNumbers, AddPageNumbersOptions} from './PageProcessor/AddPageNumbers.js';
-import {AddLineNumbers, AddLineNumbersOptions} from './PageProcessor/AddLineNumbers.js';
+import {FirstFitLineBreaker, ItemArrayWithBidiOrderInfo} from '@/LineBreaker';
+import {AddPageNumbers, AddPageNumbersOptions} from '@/PageProcessor';
+import {AddLineNumbers, AddLineNumbersOptions} from '@/PageProcessor';
 import {StringCounter} from './toolbox/StringCounter.js';
 import {trimPunctuation} from './Punctuation.js';
 import {ScriptAndTextDirectionDetector} from './toolbox/ScriptAndTextDirectionDetector';
-import {BidiDisplayOrder, IntrinsicTextDirection} from './Bidi/BidiDisplayOrder.js';
+import {BidiDisplayOrder, IntrinsicTextDirection} from '@/Bidi';
 import {AdjustmentRatio} from './AdjustmentRatio.js';
 import {MinusInfinitePenalty, Penalty} from './Penalty.js';
-import {AddMainTextLinePositionMetadata} from './PageProcessor/AddMainTextLinePositionMetadata.js';
-import {AddMarginalia, AddMarginaliaOptions} from './PageProcessor/AddMarginalia.js';
+import {AddMainTextLinePositionMetadata} from '@/PageProcessor';
+import {AddMarginalia, AddMarginaliaOptions} from '@/PageProcessor';
 import {TypesetterItem} from "./TypesetterItem.js";
-import {PageProcessor} from "./PageProcessor/PageProcessor.js";
-import {BidiOrderInfo} from "./Bidi/BidiOrderInfo.js";
-import {compactItemArray} from "./Compactor/CompactItemArray.js";
-import {hyphenateTextBoxes} from "./Hyphenator/HyphenateTextBoxes.js";
-import {HyphenationLanguage} from "./Hyphenator/Hyphenator.js";
+import {PageProcessor} from "@/PageProcessor";
+import {BidiOrderInfo} from "@/Bidi";
+import {compactItemArray} from "@/Compactor";
+import {hyphenateTextBoxes} from "@/Hyphenator";
+import {HyphenationLanguage} from "@/Hyphenator";
 import {toFixedPrecision} from "./toolbox/Util";
 
 export const BasicTypesetterSignature = 'BasicTypesetter';
@@ -365,16 +363,16 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
         // For all but the last line, calculate and set glue height based on the height of the next line
         const nextLineHeight = lines[i + 1].getHeight();
         interLineGlue.setHeight(this.calcInterLineGlueHeight(nextLineHeight))
-        .setWidth(this.lineWidth)
-        .setStretch(0)
-        .setShrink(0)
-        .addMetadata(MetadataKey.InterLineGlueSet, true);
+          .setWidth(this.lineWidth)
+          .setStretch(0)
+          .setShrink(0)
+          .addMetadata(MetadataKey.InterLineGlueSet, true);
       } else {
         // After the last line, add unset glue.
         // This glue will be needed later if paragraphs need to be put together.
         interLineGlue.setHeight(0)
-        .setWidth(this.lineWidth)
-        .addMetadata(MetadataKey.InterLineGlueSet, false);
+          .setWidth(this.lineWidth)
+          .addMetadata(MetadataKey.InterLineGlueSet, false);
       }
       outputList.pushItem(interLineGlue);
     }
@@ -524,19 +522,19 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
       this.debug && console.log(apparatuses);
       if (apparatuses.length > 0) {
         mainTextVerticalList.pushItem((new Glue(TypesetterItemDirection.VerticalItemDirection))
-        .setHeight(this.options.textToApparatusGlue.height)
-        .setStretch(this.options.textToApparatusGlue.stretch)
-        .setShrink(this.options.textToApparatusGlue.shrink)
-        .addMetadata(MetadataKey.GlueType, GlueType.TextToApparatusVerticalGlue));
+          .setHeight(this.options.textToApparatusGlue.height)
+          .setStretch(this.options.textToApparatusGlue.stretch)
+          .setShrink(this.options.textToApparatusGlue.shrink)
+          .addMetadata(MetadataKey.GlueType, GlueType.TextToApparatusVerticalGlue));
 
         for (let i = 0; i < apparatuses.length; i++) {
           mainTextVerticalList.pushItemArray(apparatuses[i].getList());
           if (i !== apparatuses.length - 1) {
             mainTextVerticalList.pushItem((new Glue(TypesetterItemDirection.VerticalItemDirection))
-            .setHeight(this.options.interApparatusGlue.height)
-            .setStretch(this.options.interApparatusGlue.stretch)
-            .setShrink(this.options.interApparatusGlue.shrink)
-            .addMetadata(MetadataKey.GlueType, GlueType.InterApparatusVerticalGlue));
+              .setHeight(this.options.interApparatusGlue.height)
+              .setStretch(this.options.interApparatusGlue.stretch)
+              .setShrink(this.options.interApparatusGlue.shrink)
+              .addMetadata(MetadataKey.GlueType, GlueType.InterApparatusVerticalGlue));
           }
         }
       }
@@ -718,9 +716,9 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
   ejectPage(verticalList: ItemList, pageNumber: number, firstLine: number, lastLine: number): TypesetterPage[] {
     // this.debug && console.log(`Ejecting page ${pageNumber}: lines ${firstLine} to ${lastLine}`);
     verticalList
-    .setShiftX(this.options.marginLeft)
-    .setShiftY(this.options.marginTop)
-    .addMetadata(MetadataKey.ListType, ListType.MainTextBlockList);
+      .setShiftX(this.options.marginLeft)
+      .setShiftY(this.options.marginTop)
+      .addMetadata(MetadataKey.ListType, ListType.MainTextBlockList);
 
     const adjRatio = AdjustmentRatio.calculateVerticalAdjustmentRatio(verticalList.getList(), this.textAreaHeight);
     if (adjRatio === null) {
@@ -738,8 +736,8 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
           if ((currentHeight + item.getHeight()) > this.textAreaHeight) {
             const vList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
             vList.setList(itemList).setShiftX(this.options.marginLeft)
-            .setShiftY(this.options.marginTop)
-            .addMetadata(MetadataKey.ListType, ListType.MainTextBlockList);
+              .setShiftY(this.options.marginTop)
+              .addMetadata(MetadataKey.ListType, ListType.MainTextBlockList);
             // eject a page
             const page = new TypesetterPage(this.options.pageWidth, this.options.pageHeight, [vList]);
             page.addMetadata(MetadataKey.PageNumber, `${pageNumber + pages.length}`);
@@ -760,8 +758,8 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
       if (itemList.length > 0) {
         const vList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
         vList.setList(itemList).setShiftX(this.options.marginLeft)
-        .setShiftY(this.options.marginTop)
-        .addMetadata(MetadataKey.ListType, ListType.MainTextBlockList);
+          .setShiftY(this.options.marginTop)
+          .addMetadata(MetadataKey.ListType, ListType.MainTextBlockList);
         // eject a page
         const page = new TypesetterPage(this.options.pageWidth, this.options.pageHeight, [vList]);
         page.addMetadata(MetadataKey.PageNumber, `${pageNumber + pages.length}`);
@@ -893,7 +891,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
               throw new Error(`Inter line glue not set in state 1`);
             }
             currentInterLineGlue.setHeight(this.calcInterLineGlueHeight(nextLineHeight))
-            .addMetadata(MetadataKey.InterLineGlueSet, true);
+              .addMetadata(MetadataKey.InterLineGlueSet, true);
             outputList.pushItem(currentInterLineGlue);
             // this.debug && console.log(`Pushing ${tmpItems.length} item(s) in temp stack to output list`)
             outputList.pushItemArray(tmpItems);
@@ -933,26 +931,26 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
     });
     if (apparatuses.length > 0) {
       verticalListToTest.pushItem((new Glue(TypesetterItemDirection.VerticalItemDirection))
-      .setHeight(this.options.textToApparatusGlue.height)
-      .setStretch(this.options.textToApparatusGlue.stretch)
-      .setShrink(this.options.textToApparatusGlue.shrink)
-      .addMetadata(MetadataKey.GlueType, GlueType.TextToApparatusVerticalGlue));
+        .setHeight(this.options.textToApparatusGlue.height)
+        .setStretch(this.options.textToApparatusGlue.stretch)
+        .setShrink(this.options.textToApparatusGlue.shrink)
+        .addMetadata(MetadataKey.GlueType, GlueType.TextToApparatusVerticalGlue));
       for (let i = 0; i < apparatuses.length; i++) {
         verticalListToTest.pushItemArray(apparatuses[i].getList());
         if (i !== apparatuses.length - 1) {
           verticalListToTest.pushItem((new Glue(TypesetterItemDirection.VerticalItemDirection))
-          .setHeight(this.options.interApparatusGlue.height)
-          .setStretch(this.options.interApparatusGlue.stretch)
-          .setShrink(this.options.interApparatusGlue.shrink)
-          .addMetadata(MetadataKey.GlueType, GlueType.InterApparatusVerticalGlue));
+            .setHeight(this.options.interApparatusGlue.height)
+            .setStretch(this.options.interApparatusGlue.stretch)
+            .setShrink(this.options.interApparatusGlue.shrink)
+            .addMetadata(MetadataKey.GlueType, GlueType.InterApparatusVerticalGlue));
         }
       }
     } else {
       // no apparatuses, add glue to fill up the page
       verticalListToTest.pushItem((new Glue(TypesetterItemDirection.VerticalItemDirection))
-      .setHeight(0)
-      .setStretch(this.options.textToApparatusGlue.stretch)
-      .setShrink(0));
+        .setHeight(0)
+        .setStretch(this.options.textToApparatusGlue.stretch)
+        .setShrink(0));
     }
     return verticalListToTest;
   }
@@ -1011,7 +1009,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
             }
             itemsInRange.push(item);
             // the range's penalty is the penalty of the next penalty item after any glue
-            let lookAheadItemIndex = index +1;
+            let lookAheadItemIndex = index + 1;
             while (itemList[lookAheadItemIndex] !== undefined && itemList[lookAheadItemIndex] instanceof Glue) {
               lookAheadItemIndex++;
             }

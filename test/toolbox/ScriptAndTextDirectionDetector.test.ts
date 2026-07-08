@@ -38,9 +38,13 @@ describe('ScriptAndTextDirectionDetector', () => {
     it('should return "en" for numeric strings', () => {
       expect(detector.detectTextDirection('123')).toBe('en');
       expect(detector.detectTextDirection('(123)')).toBe('en');
+      expect(detector.detectTextDirection('(1.2)')).toBe('en');
       expect(detector.detectTextDirection('[456]')).toBe('en');
       expect(detector.detectTextDirection('«789»')).toBe('en');
       expect(detector.detectTextDirection('123.')).toBe('en');
+      expect(detector.detectTextDirection('123.45')).toBe('en');
+      expect(detector.detectTextDirection('123,45')).toBe('en');
+      expect(detector.detectTextDirection('123,456.789')).toBe('en');
     });
 
     it('should handle Arabic digits as "rtl" (since they are not in [0-9])', () => {
@@ -78,6 +82,9 @@ describe('ScriptAndTextDirectionDetector', () => {
 
     it('should detect Latin script', () => {
       expect(detector.detectScript('abc')).toBe('la');
+      expect(detector.detectScript('España')).toBe('la');
+      expect(detector.detectScript('Nájera')).toBe('la');
+      expect(detector.detectScript('Köln')).toBe('la');
     });
 
     it('should detect Greek script', () => {
@@ -104,9 +111,8 @@ describe('ScriptAndTextDirectionDetector', () => {
     });
 
     it('should not ignore punctuation when specified', () => {
-      // If ignorePunctuation is false, numMatches will be 3 for 'abc.', stringLength is 4.
-      // So it should fall back to 'la' eventually, but it won't match 'la' if it's strictly numMatches === stringLength
-      // Wait, 'la' regex is [\u0000-\u007F], which includes '.'
+
+      // should return 'la' because '.' is in fact part of regex for 'la'
       expect(detector.detectScript('abc.', false)).toBe('la');
 
       // For Greek 'αβγ.', regex for 'el' doesn't include '.'
