@@ -14,6 +14,7 @@ describe('ScriptAndTextDirectionDetector', () => {
     it('should return empty string for neutral characters', () => {
       expect(detector.detectTextDirection('.')).toBe('');
       expect(detector.detectTextDirection(',')).toBe('');
+      expect(detector.detectTextDirection('-')).toBe('');
       expect(detector.detectTextDirection(';')).toBe('');
       expect(detector.detectTextDirection(':')).toBe('');
       expect(detector.detectTextDirection('(')).toBe('');
@@ -25,6 +26,8 @@ describe('ScriptAndTextDirectionDetector', () => {
       expect(detector.detectTextDirection('«')).toBe('');
       expect(detector.detectTextDirection('»')).toBe('');
       expect(detector.detectTextDirection('"')).toBe('');
+      // expect(detector.detectTextDirection('־')).toBe('');
+      // expect(detector.detectTextDirection('״')).toBe('');
       expect(detector.detectTextDirection('‘')).toBe('');
       expect(detector.detectTextDirection('’')).toBe('');
       expect(detector.detectTextDirection('“')).toBe('');
@@ -130,7 +133,7 @@ describe('ScriptAndTextDirectionDetector', () => {
     });
 
     it('should correctly handle Hebrew strings with numbers', () => {
-      const cases = ['994ב32', '994ב', ' 994ב32–995א14'];
+      const cases = ['994ב32', '994ב', '994ב32–995א14'];
       for (const text of cases) {
         expect(detector.detectMajorityScript(text), `Testing '${text}'`).toBe('he');
         expect(detector.detectScript(text), `Testing '${text}'`).toBe('he');

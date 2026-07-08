@@ -1,7 +1,35 @@
-import {isNumeric, isWhiteSpace} from './Util.js';
+import {isWhiteSpace} from './Util.js';
 
-const punctuationRegex = /[.,-:–;—\]['()“”"«»‘’]/gi;
-const latinScriptNumberRegex = /[0-9]/gi;
+
+/**
+ * A list of characters that are considered neutral characters when it comes to determining the script of a string.
+ */
+const neutralCharacters = [
+  '\x5b', // left square bracket
+  '\x5d', // right square bracket
+  '(', // left parenthesis
+  ')', // right parenthesis
+  '{', // left curly brace
+  '}', // right curly brace
+  '«', // left guillemet
+  '»', // right guillemet
+  '.', // period
+  ',', // comma
+  ';', // semicolon
+  '\'', // apostrophe
+  ':', // colon
+  '-', // hyphen-minus
+  '"', // quotation mark
+  '–', // en dash
+  '—', // em dash
+  '“', // left double quotation mark
+  '”', // right double quotation mark
+  '‘', // left single quotation mark
+  '’', // right single quotation mark
+];
+
+const escapeRegExpForCharacterClass = (character: string): string => character.replace(/[\\\]-]/g, '\\$&');
+const neutralCharactersPattern = `[${neutralCharacters.map(escapeRegExpForCharacterClass).join('')}]+`;
 
 // Based on http://www.unicode.org/Public/UNIDATA/extracted/DerivedBidiClass.txt
 // const ltrRegex = /[\u0041-\u005a\u0061-\u007a\u00aa\u00b5\u00ba\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u02b8\u02bb-\u02c1]/gi
@@ -41,51 +69,35 @@ export class ScriptAndTextDirectionDetector {
       return '';
     }
     // 2. Is it all (common) neutral characters?
-    // TODO: make a better list of neutrals
-    const neutralCharacters = ['[', ']', '(', ')', '{', '}', '«', '»', '.', ',', ';', "'", '־', '״', ':', '"', ' ', '“', '”', '‘', '’'];
-    let allNeutrals = true;
-    for (let i = 0; i < word.length; i++) {
-      if (neutralCharacters.indexOf(word.charAt(i)) === -1) {
-        allNeutrals = false;
-        break;
-      }
-    }
-    if (allNeutrals) {
+    const neutralCharactersOnlyRegex = new RegExp(`^${neutralCharactersPattern}$`, 'u');
+    if (neutralCharactersOnlyRegex.test(word)) {
       return '';
     }
 
     // 2. Is it a numeric string possibly surrounded by brackets or other neutrals?
-    let firstNonStartingNeutral = -1;
-    const startingNeutrals = ['[', ']', '(', ')', "'", '־', '״', '{', '}', '«', '»', '"', ' ', '“', '”', '‘', '’'];
-    for (let i = 0; i < word.length; i++) {
-      if (startingNeutrals.indexOf(word.charAt(i)) === -1) {
-        firstNonStartingNeutral = i;
-        break;
-      }
-    }
-    if (firstNonStartingNeutral === -1) {
-      // this should not happen because starting neutrals is a subset of neutralCharacters
+    const leadingNeutralCharactersRegex = new RegExp(`^${neutralCharactersPattern}`, 'u');
+    const trailingNeutralCharactersRegex = new RegExp(`${neutralCharactersPattern}$`, 'u');
+
+
+    const leadingNeutralCharactersMatch = word.match(leadingNeutralCharactersRegex);
+    const firstNonStartingNeutral = leadingNeutralCharactersMatch ? leadingNeutralCharactersMatch[0].length : 0;
+    if (firstNonStartingNeutral >= word.length) {
+      // this should not happen because starting neutrals are a subset of neutral characters
       console.warn(`Neutral string found while testing for a numeric one!`);
       // but it's still a neutral, so it's not an error
       return '';
     }
 
-    let lastNonNeutral = -1;
-    for (let i = word.length - 1; i >= 0; i--) {
-      if (neutralCharacters.indexOf(word.charAt(i)) === -1) {
-        lastNonNeutral = i;
-        break;
-      }
-    }
-    if (lastNonNeutral === -1) {
+    const wordWithoutTrailingNeutrals = word.replace(trailingNeutralCharactersRegex, '');
+    if (wordWithoutTrailingNeutrals.length === 0) {
       // again, this should not happen
       console.warn(`Neutral string found while testing for a numeric one!`);
       // but it's still a neutral, so it's not an error
       return '';
     }
-    const stringToTest = word.substring(firstNonStartingNeutral, lastNonNeutral + 1);
-    // console.log(`Testing for numeric string: '${stringToTest}'`)
-    if (isNumeric(stringToTest)) {
+    const stringToTest = wordWithoutTrailingNeutrals.substring(firstNonStartingNeutral);
+    const numericPrefixRegex = /^[0-9]/;
+    if (numericPrefixRegex.test(stringToTest)) {
       return 'en';
     }
 
@@ -111,7 +123,10 @@ export class ScriptAndTextDirectionDetector {
    * @param ignorePunctuation
    */
   detectScript(text: string, ignorePunctuation = true): Script | null {
-    const textWithoutNeutrals = text.replace(punctuationRegex, '').replace(latinScriptNumberRegex, '').replace(/\s/g, '');
+    const neutralsRegex = new RegExp(`${neutralCharactersPattern}`, 'gi');
+    const latinScriptNumberRegex = /[0-9]/gi;
+
+    const textWithoutNeutrals = text.replace(neutralsRegex, '').replace(latinScriptNumberRegex, '').replace(/\s/g, '');
     if (textWithoutNeutrals.length === 0) {
       return null;
     }
@@ -141,8 +156,10 @@ export class ScriptAndTextDirectionDetector {
    * @return {string}
    */
   detectMajorityScript(text: string): string {
-    // strip punctuation and Latin script numbers, which are neutral characters when it comes to script detection
-    const textWithoutNeutrals = text.replace(punctuationRegex, '').replace(latinScriptNumberRegex, '').replace(/\s/g, '');
+    // strip neutrals and Latin script numbers, which are neutral characters when it comes to script detection
+    const neutralsRegex = new RegExp(`${neutralCharactersPattern}`, 'gi');
+    const latinScriptNumberRegex = /[0-9]/gi;
+    const textWithoutNeutrals = text.replace(neutralsRegex, '').replace(latinScriptNumberRegex, '').replace(/\s/g, '');
     if (textWithoutNeutrals.length === 0) {
       // only neutral characters, so return default language
       return this.defaultScript;
