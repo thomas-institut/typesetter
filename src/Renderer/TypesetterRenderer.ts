@@ -16,15 +16,15 @@
  *
  */
 
-import {Glue} from '../Glue.js';
-import {Box} from '../Box.js';
+import {Glue} from '@/Glue';
+import {Box} from '@/Box';
 import * as TypesetterItemDirection from '../TypesetterItemDirection.js';
-import {ItemList} from '../ItemList.js';
-import {Penalty} from '../Penalty.js';
-import {TextBox} from '../TextBox.js';
-import {TypesetterPage} from "../TypesetterPage.js";
-import {TypesetterDocument} from "../TypesetterDocument.js";
-import {TypesetterItem} from "../TypesetterItem.js";
+import {ItemList} from '@/ItemList';
+import {Penalty} from '@/Penalty';
+import {TextBox} from '@/TextBox';
+import {TypesetterPage} from "@/TypesetterPage";
+import {TypesetterDocument} from "@/TypesetterDocument";
+import {TypesetterItem} from "@/TypesetterItem";
 
 export class TypesetterRenderer {
 
