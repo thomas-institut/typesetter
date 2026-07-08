@@ -1,5 +1,3 @@
-// noinspection ES6PreferShortImport
-
 /*
  *  Copyright (C) 2022 Universität zu Köln
  *
@@ -18,9 +16,9 @@
  *
  */
 
-import {Glue} from '../Glue.js';
-import {TextBox} from '../TextBox.js';
-import {Dimension} from '../Dimension.js';
+import {Glue} from '@/Glue';
+import {TextBox} from '@/TextBox';
+import {Dimension} from '@/Dimension';
 import {deepGetValuesForKey} from '@/toolbox/ObjectUtil';
 
 const categories = ['strings', 'page', 'paragraph', 'text', 'glue'];
@@ -69,6 +67,7 @@ export interface FontConversionOutputSpec {
   // E.g. 0.9, to make the output 90% the size of the input text
   fontSizeFactor?: number;
 }
+
 type FontConversionDefinitions = FontConversionDefinition[];
 
 interface Metadata {
@@ -106,7 +105,7 @@ export interface ParagraphStyleDef {
   spaceBefore?: string;
   spaceAfter?: string;
   align?: string;
-  keepWithNext?: boolean
+  keepWithNext?: boolean;
 }
 
 export interface GlueStyleDef {
@@ -160,17 +159,17 @@ export class StyleSheet {
    */
   getFontFamilies(): string[] {
     return deepGetValuesForKey(this.styles, 'fontFamily')
-    .filter((family) => {
-      return family !== '';
-    })
-    .filter((item, pos, theArray) => {
-      return theArray.indexOf(item) === pos;
-    });
+      .filter((family) => {
+        return family !== '';
+      })
+      .filter((item, pos, theArray) => {
+        return theArray.indexOf(item) === pos;
+      });
   }
 
   merge(anotherStyleSheetDef: any) {
     Object.keys(anotherStyleSheetDef).forEach((styleName) => {
-      this.__updateStyle(styleName, anotherStyleSheetDef[styleName]);
+      this.updateStyle(styleName, anotherStyleSheetDef[styleName]);
     });
     this.names = this.getNameArray(this.styles);
   }
@@ -184,7 +183,7 @@ export class StyleSheet {
   }
 
 
-  __updateStyle(styleName: string, styleDef: StyleDef) {
+  private updateStyle(styleName: string, styleDef: StyleDef) {
     if (this.styleExists(styleName)) {
       // merge
       const currentDef = this.getStyleDef(styleName);
@@ -204,39 +203,37 @@ export class StyleSheet {
     }
   }
 
-  apply<T>(item: T, styles: string | string[]): Promise<T> {
-    return new Promise(async (resolve) => {
-      let stylesToApply = this.getStylesToApply(styles);
-      if (stylesToApply.length === 0) {
-        stylesToApply = ['default'];
-      }
+  async apply<T>(item: T, styles: string | string[]): Promise<T> {
+    let stylesToApply = this.getStylesToApply(styles);
+    if (stylesToApply.length === 0) {
+      stylesToApply = ['default'];
+    }
 
-      const styleDefs = stylesToApply.map((styleName) => {
-        return this.getStyleDef(styleName);
-      });
-      let baseTextBox = new TextBox();
-
-      for (let i = 0; i < styleDefs.length; i++) {
-        const styleDef = styleDefs[i];
-        if (item instanceof Glue) {
-          [item as Glue, baseTextBox] = await this.applyStyleToGlue(item, styleDef, baseTextBox);
-        } else if (item instanceof TextBox) {
-          (item as TextBox) = await this.applyStyleToTextBox(item, styleDef);
-        }
-      }
-      // Special characters that need specific font conversions
-      if (item instanceof TextBox) {
-        for (let i = 0; i < this.specialStrings.length; i++) {
-          const specialString = this.specialStrings[i];
-          if (item.getText() === specialString.string) {
-            item.setFontFamily(specialString.fontFamily);
-            break;
-          }
-        }
-      }
-
-      resolve(item);
+    const styleDefs = stylesToApply.map((styleName) => {
+      return this.getStyleDef(styleName);
     });
+    let baseTextBox = new TextBox();
+
+    for (let i = 0; i < styleDefs.length; i++) {
+      const styleDef = styleDefs[i];
+      if (item instanceof Glue) {
+        [item as Glue, baseTextBox] = await this.applyStyleToGlue(item, styleDef, baseTextBox);
+      } else if (item instanceof TextBox) {
+        (item as TextBox) = await this.applyStyleToTextBox(item, styleDef);
+      }
+    }
+    // Special characters that need specific font conversions
+    if (item instanceof TextBox) {
+      for (let i = 0; i < this.specialStrings.length; i++) {
+        const specialString = this.specialStrings[i];
+        if (item.getText() === specialString.string) {
+          item.setFontFamily(specialString.fontFamily);
+          break;
+        }
+      }
+    }
+
+    return item;
   }
 
   /**
@@ -246,28 +243,26 @@ export class StyleSheet {
    * @param {TextBox}baseTextBox
    * @return {Promise<[Glue, TextBox]>}
    */
-  applyStyleToGlue(glueItem: Glue, styleDef: StyleDef, baseTextBox: TextBox): Promise<[Glue, TextBox]> {
-    return new Promise(async (resolve) => {
-      // first, apply the style to the base text box
-      baseTextBox = await this.applyStyleToTextBox(baseTextBox, styleDef);
-      if (styleDef.glue !== undefined) {
-        // then set the glue
-        const glueDef = styleDef.glue;
-        if (glueDef.width !== undefined && glueDef.width !== '') {
-          const pixelValue = Dimension.getPixelValue(glueDef.width, baseTextBox.getFontSize());
-          glueItem.setWidth(pixelValue);
-        }
-        if (glueDef.stretch !== undefined && glueDef.stretch !== '') {
-          const pixelValue = Dimension.getPixelValue(glueDef.stretch, baseTextBox.getFontSize());
-          glueItem.setStretch(pixelValue);
-        }
-        if (glueDef.shrink !== undefined && glueDef.shrink !== '') {
-          const pixelValue = Dimension.getPixelValue(glueDef.shrink, baseTextBox.getFontSize());
-          glueItem.setShrink(pixelValue);
-        }
+  async applyStyleToGlue(glueItem: Glue, styleDef: StyleDef, baseTextBox: TextBox): Promise<[Glue, TextBox]> {
+    // first, apply the style to the base text box
+    baseTextBox = await this.applyStyleToTextBox(baseTextBox, styleDef);
+    if (styleDef.glue !== undefined) {
+      // then set the glue
+      const glueDef = styleDef.glue;
+      if (glueDef.width !== undefined && glueDef.width !== '') {
+        const pixelValue = Dimension.getPixelValue(glueDef.width, baseTextBox.getFontSize());
+        glueItem.setWidth(pixelValue);
       }
-      resolve([glueItem, baseTextBox]);
-    });
+      if (glueDef.stretch !== undefined && glueDef.stretch !== '') {
+        const pixelValue = Dimension.getPixelValue(glueDef.stretch, baseTextBox.getFontSize());
+        glueItem.setStretch(pixelValue);
+      }
+      if (glueDef.shrink !== undefined && glueDef.shrink !== '') {
+        const pixelValue = Dimension.getPixelValue(glueDef.shrink, baseTextBox.getFontSize());
+        glueItem.setShrink(pixelValue);
+      }
+    }
+    return [glueItem, baseTextBox];
   }
 
   /**
@@ -276,44 +271,41 @@ export class StyleSheet {
    * @param {{}}styleDef
    * @return {Promise<TextBox>}
    */
-  applyStyleToTextBox(textBox: TextBox, styleDef: StyleDef): Promise<TextBox> {
-    return new Promise(async (resolve) => {
-      // this.debug && console.log(`Applying style to text box`)
-      // this.debug && console.log(styleDef)
-      // this.debug && console.log(textBox)
-      if (styleDef.text !== undefined) {
-        const fontDef = styleDef.text;
-        if (fontDef.fontFamily !== undefined && fontDef.fontFamily !== '') {
-          textBox.setFontFamily(fontDef.fontFamily);
-        }
-        if (fontDef.fontStyle !== undefined && fontDef.fontStyle !== '') {
-          textBox.setFontStyle(fontDef.fontStyle);
-        }
-        if (fontDef.fontWeight !== undefined && fontDef.fontWeight !== '') {
-          textBox.setFontWeight(fontDef.fontWeight);
-        }
-        if (fontDef.fontSize !== undefined && fontDef.fontSize !== '') {
-          if (textBox.getText() === 'scripts') {
-            console.log(`Changing font size text box, current font size = ${textBox.getFontSize()}`);
-          }
-          const newFontSize = Dimension.getPixelValue(fontDef.fontSize, textBox.getFontSize());
-          textBox.setFontSize(newFontSize);
-        }
-        if (fontDef.shiftY !== undefined && fontDef.shiftY !== '') {
-          const newShiftY = Dimension.getPixelValue(fontDef.shiftY, textBox.getFontSize());
-          textBox.setShiftY(newShiftY);
-        }
+  async applyStyleToTextBox(textBox: TextBox, styleDef: StyleDef): Promise<TextBox> {
+    // this.debug && console.log(`Applying style to text box`)
+    // this.debug && console.log(styleDef)
+    // this.debug && console.log(textBox)
+    if (styleDef.text !== undefined) {
+      const fontDef = styleDef.text;
+      if (fontDef.fontFamily !== undefined && fontDef.fontFamily !== '') {
+        textBox.setFontFamily(fontDef.fontFamily);
       }
-      resolve(textBox);
-    });
+      if (fontDef.fontStyle !== undefined && fontDef.fontStyle !== '') {
+        textBox.setFontStyle(fontDef.fontStyle);
+      }
+      if (fontDef.fontWeight !== undefined && fontDef.fontWeight !== '') {
+        textBox.setFontWeight(fontDef.fontWeight);
+      }
+      if (fontDef.fontSize !== undefined && fontDef.fontSize !== '') {
+        if (textBox.getText() === 'scripts') {
+          console.log(`Changing font size text box, current font size = ${textBox.getFontSize()}`);
+        }
+        const newFontSize = Dimension.getPixelValue(fontDef.fontSize, textBox.getFontSize());
+        textBox.setFontSize(newFontSize);
+      }
+      if (fontDef.shiftY !== undefined && fontDef.shiftY !== '') {
+        const newShiftY = Dimension.getPixelValue(fontDef.shiftY, textBox.getFontSize());
+        textBox.setShiftY(newShiftY);
+      }
+    }
+    return textBox;
   }
 
-  __getStyleAncestryLine(styleName: string): string[] {
+  private getStyleAncestryLine(styleName: string): string[] {
     let line = [styleName];
-
     const styleDef = this.getStyleDef(styleName);
     if (styleDef !== undefined && styleDef.parent !== undefined && styleDef.parent !== '') {
-      const parentAncestry = this.__getStyleAncestryLine(styleDef.parent);
+      const parentAncestry = this.getStyleAncestryLine(styleDef.parent);
       line = parentAncestry.concat(line);
     }
     return line;
@@ -341,58 +333,53 @@ export class StyleSheet {
    *
    * @param styles
    */
-  getParagraphStyle(styles: string | string[]): Promise<ParagraphStyleDef> {
-    return new Promise(async (resolve) => {
-      let stylesToApply = this.getStylesToApply(styles);
-      if (stylesToApply.length === 0) {
-        stylesToApply = ['default'];
-      }
-      // this.debug && console.log(`Getting paragraph style, styles to apply:`)
-      // this.debug && console.log(stylesToApply)
-      const styleDefs = stylesToApply.map((styleName) => {
-        return this.getStyleDef(styleName);
-      });
-      // this.debug && console.log(styleDefs)
-      let baseTextBox = new TextBox();
-      let paragraphStyle: ParagraphStyleDef = {};
-      for (let i = 0; i < styleDefs.length; i++) {
-        const styleDef = styleDefs[i];
-        if (styleDef === undefined) {
-          console.warn(`Undefined style found '${stylesToApply[i]}'`);
-          continue;
-        }
-        [paragraphStyle, baseTextBox] = await this.applyStyleToParagraph(paragraphStyle, styleDef, baseTextBox);
-      }
-      resolve(paragraphStyle);
+  async getParagraphStyle(styles: string | string[]): Promise<ParagraphStyleDef> {
+    let stylesToApply = this.getStylesToApply(styles);
+    if (stylesToApply.length === 0) {
+      stylesToApply = ['default'];
+    }
+    // this.debug && console.log(`Getting paragraph style, styles to apply:`)
+    // this.debug && console.log(stylesToApply)
+    const styleDefs = stylesToApply.map((styleName) => {
+      return this.getStyleDef(styleName);
     });
+    // this.debug && console.log(styleDefs)
+    let baseTextBox = new TextBox();
+    let paragraphStyle: ParagraphStyleDef = {};
+    for (let i = 0; i < styleDefs.length; i++) {
+      const styleDef = styleDefs[i];
+      if (styleDef === undefined) {
+        console.warn(`Undefined style found '${stylesToApply[i]}'`);
+        continue;
+      }
+      [paragraphStyle, baseTextBox] = await this.applyStyleToParagraph(paragraphStyle, styleDef, baseTextBox);
+    }
+    return paragraphStyle;
   }
 
-  applyStyleToParagraph(paragraphDef: ParagraphStyleDef, styleDef: StyleDef, baseTextBox: TextBox): Promise<[ParagraphStyleDef, TextBox]> {
-
-    return new Promise(async (resolve) => {
-      // first, apply the style to the base text box
-      baseTextBox = await this.applyStyleToTextBox(baseTextBox, styleDef);
-      if (styleDef.paragraph !== undefined) {
-        // then set the glue
-        const parDef = styleDef.paragraph;
-        const dimensionFields = ['lineSkip', 'indent', 'spaceBefore', 'spaceAfter'];
-        for (let i = 0; i < dimensionFields.length; i++) {
-          const field = dimensionFields[i];
+  async applyStyleToParagraph(paragraphDef: ParagraphStyleDef, styleDef: StyleDef, baseTextBox: TextBox): Promise<[ParagraphStyleDef, TextBox]> {
+    // first, apply the style to the base text box
+    baseTextBox = await this.applyStyleToTextBox(baseTextBox, styleDef);
+    if (styleDef.paragraph !== undefined) {
+      // then set the glue
+      const parDef = styleDef.paragraph;
+      const dimensionFields = ['lineSkip', 'indent', 'spaceBefore', 'spaceAfter'];
+      for (let i = 0; i < dimensionFields.length; i++) {
+        const field = dimensionFields[i];
+        // @ts-expect-error Using def as object
+        if (parDef[field] !== undefined && parDef[field] !== '') {
           // @ts-expect-error Using def as object
-          if (parDef[field] !== undefined && parDef[field] !== '') {
-            // @ts-expect-error Using def as object
-            paragraphDef[field] = Dimension.getPixelValue(parDef[field], baseTextBox.getFontSize());
-          }
-        }
-        if (parDef.align !== undefined && parDef.align !== '') {
-          paragraphDef['align'] = parDef.align;
-        }
-        if (parDef.keepWithNext !== undefined) {
-          paragraphDef.keepWithNext = parDef.keepWithNext;
+          paragraphDef[field] = Dimension.getPixelValue(parDef[field], baseTextBox.getFontSize());
         }
       }
-      resolve([paragraphDef, baseTextBox]);
-    });
+      if (parDef.align !== undefined && parDef.align !== '') {
+        paragraphDef['align'] = parDef.align;
+      }
+      if (parDef.keepWithNext !== undefined) {
+        paragraphDef.keepWithNext = parDef.keepWithNext;
+      }
+    }
+    return [paragraphDef, baseTextBox];
   }
 
   private mergeObjects(objA: { [key: string]: any }, objB: { [key: string]: any }) {
@@ -434,7 +421,7 @@ export class StyleSheet {
     });
     let stylesToApply: string[] = [];
     styleArray.forEach((styleName) => {
-      stylesToApply = stylesToApply.concat(this.__getStyleAncestryLine(styleName));
+      stylesToApply = stylesToApply.concat(this.getStyleAncestryLine(styleName));
     });
     return stylesToApply;
   }
