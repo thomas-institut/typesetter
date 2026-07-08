@@ -35,7 +35,7 @@ import {AddPageNumbers, AddPageNumbersOptions} from './PageProcessor/AddPageNumb
 import {AddLineNumbers, AddLineNumbersOptions} from './PageProcessor/AddLineNumbers.js';
 import {StringCounter} from './toolbox/StringCounter.js';
 import {trimPunctuation} from './Punctuation.js';
-import {LanguageDetector} from './toolbox/LanguageDetector.js';
+import {ScriptAndTextDirectionDetector} from './toolbox/ScriptAndTextDirectionDetector';
 import {BidiDisplayOrder, IntrinsicTextDirection} from './Bidi/BidiDisplayOrder.js';
 import {AdjustmentRatio} from './AdjustmentRatio.js';
 import {MinusInfinitePenalty, Penalty} from './Penalty.js';
@@ -830,7 +830,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
     if (item instanceof TextBox) {
       if (item.getTextDirection() === '') {
         // text direction is not set yet, let's calculate it!
-        const ld = new LanguageDetector('la');
+        const ld = new ScriptAndTextDirectionDetector('la');
         return ld.detectTextDirection(item.getText());
       } else {
         return item.getTextDirection() as IntrinsicTextDirection;

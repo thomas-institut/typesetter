@@ -1,7 +1,7 @@
 
 import {ItemList} from './ItemList.js';
 import {TextBox} from './TextBox.js';
-import {LanguageDetector} from '@/toolbox/LanguageDetector.js';
+import {ScriptAndTextDirectionDetector} from '@/toolbox/ScriptAndTextDirectionDetector';
 import {FontConversionDefinition} from "@/Style";
 
 
@@ -78,7 +78,7 @@ export class FontConversions {
       }
       // style attributes match, check the script
       if (def.from.script !== undefined) {
-        const ld = new LanguageDetector(defaultScript);
+        const ld = new ScriptAndTextDirectionDetector(defaultScript);
         const textScript = ld.detectScript(textBoxItem.getText());
         if (textScript === def.from.script) {
           match = def;
