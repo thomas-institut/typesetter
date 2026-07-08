@@ -22,6 +22,9 @@ import * as TypesetterItemDirection from './TypesetterItemDirection.js';
 import * as MetadataKey from './MetadataKey.js';
 import * as GlueType from './GlueType.js';
 
+
+export const GlueClass = 'Glue';
+
 export const InfiniteStretch = 100000;
 
 /**
@@ -84,9 +87,9 @@ export class Glue extends TypesetterItem {
     return this;
   }
 
-  getExportObject() {
+  getExportObject(): Record<string, any> {
     const obj = super.getExportObject();
-    obj.class = 'Glue';
+    obj.class = GlueClass;
     obj.stretch = this.stretch;
     obj.shrink = this.shrink;
     return obj;
@@ -95,7 +98,7 @@ export class Glue extends TypesetterItem {
 
   // Factory methods
 
-  setFromObject(object: Record<string, never>, mergeValues: boolean) {
+  setFromObject(object: Record<string, any>, mergeValues: boolean): this {
     super.setFromObject(object, mergeValues);
     // repeating width and height in the template so that they default to 0, not to -1 as in TypesetterItem
     const template = {width: 0, height: 0, stretch: 0, shrink: 0};

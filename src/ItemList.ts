@@ -30,6 +30,9 @@ import {TextBox} from './TextBox.js';
 import {Box} from './Box.js';
 import {Penalty} from './Penalty.js';
 
+
+export const ItemListClass = 'ItemList';
+
 export class ItemList extends TypesetterItem {
   private list: TypesetterItem[];
 
@@ -142,16 +145,16 @@ export class ItemList extends TypesetterItem {
     return textArray.join('');
   }
 
-  getExportObject() {
+  getExportObject(): Record<string, any> {
     const obj = super.getExportObject();
-    obj.class = 'ItemList';
+    obj.class = ItemListClass;
     obj.list = this.list.map((item) => {
       return item.getExportObject();
     });
     return obj;
   }
 
-  setFromObject(object: any, mergeValues: boolean): this {
+  setFromObject(object: Record<string, any>, mergeValues: boolean): this {
     super.setFromObject(object, mergeValues);
     if (object['list'] !== undefined && Array.isArray(object['list'])) {
       this.list = [];

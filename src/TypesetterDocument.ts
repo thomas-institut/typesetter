@@ -21,6 +21,9 @@ import {TypesetterObject} from './TypesetterObject.js';
 import {ObjectFactory} from './ObjectFactory.js';
 import {TypesetterPage} from './TypesetterPage.js';
 
+
+export const TypesetterDocumentClass = 'TypesetterDocument';
+
 /**
  * A typesetter document: an array of pages with metadata
  */
@@ -72,9 +75,9 @@ export class TypesetterDocument extends TypesetterObject {
     }
   }
 
-  getExportObject() {
+  getExportObject(): Record<string, any> {
     const obj = super.getExportObject();
-    obj.class = 'TypesetterDocument';
+    obj.class = TypesetterDocumentClass;
     obj.width = this.width;
     obj.height = this.height;
     obj.pages = this.pages.map((page) => {
@@ -83,7 +86,7 @@ export class TypesetterDocument extends TypesetterObject {
     return obj;
   }
 
-  setFromObject(object: any, mergeValues: boolean): this {
+  setFromObject(object: Record<string, any>, mergeValues: boolean): this {
     super.setFromObject(object, mergeValues);
     const template = {width: 0, height: 0};
     this.copyValues(template, object, mergeValues);

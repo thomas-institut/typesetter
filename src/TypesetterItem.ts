@@ -20,6 +20,8 @@ import * as TypesetterItemDirection from './TypesetterItemDirection.js';
 import {TypesetterObject} from './TypesetterObject.js';
 
 
+export const TypesetterItemClass = 'TypesetterItem';
+
 /**
  * The base class for all typesetter items.
  *
@@ -158,9 +160,9 @@ export class TypesetterItem extends TypesetterObject {
     return this;
   }
 
-  getExportObject() {
+  getExportObject(): Record<string, any> {
     const obj = super.getExportObject();
-    obj.class = 'TypesetterItem';
+    obj.class = TypesetterItemClass;
     if (this.width !== -1) {
       obj.width = this.width;
     }

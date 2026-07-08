@@ -19,6 +19,7 @@
 
 export type MetadataType = string | number | boolean | null | Record<string, any> | Array<MetadataType> | undefined;
 
+export const TypesetterObjectClass = 'TypesetterObject';
 
 export class TypesetterObject {
 
@@ -29,10 +30,10 @@ export class TypesetterObject {
 
   /**
    *
-   * @return {{[key:string]: any}}
+   * @return {Record<string, any>}
    */
-  getExportObject(): { [key: string]: any; } {
-    const obj: { [key: string]: any } = {class: 'TypesetterObject'};
+  getExportObject(): Record<string, any> {
+    const obj: Record<string, any> = {class: TypesetterObjectClass};
     if (Object.keys(this.metadata).length !== 0) {
       obj.metadata = this.metadata;
     }
@@ -43,8 +44,8 @@ export class TypesetterObject {
    * Sets the object's values from an object
    * if mergeValues is true, current values not given in the input object
    * are preserved, otherwise default values will be used
-   * @param {{[key:string]: any}}object
-   * @param {boolean}mergeValues
+   * @param {Record<string, any>} object
+   * @param {boolean} mergeValues
    */
   setFromObject(object: Record<string, any>, mergeValues: boolean): this {
     if (!mergeValues) {
@@ -77,12 +78,12 @@ export class TypesetterObject {
 
   /**
    * Utility function to copy scalar values from an object
-   * @param{{[key:string]: any}}template
-   * @param {{[key:string]: any}}inputObject
+   * @param{Record<string, any>}template
+   * @param {Record<string, any>}inputObject
    * @param {boolean} mergeValues
    * @protected
    */
-  protected copyValues(template: { [key: string]: any; }, inputObject: { [key: string]: any; }, mergeValues: boolean) {
+  protected copyValues(template: Record<string, any>, inputObject: Record<string, any>, mergeValues: boolean) {
     Object.keys(template).forEach((key) => {
       // @ts-expect-error using string key
       const defaultValue = mergeValues ? this[key] : template[key];

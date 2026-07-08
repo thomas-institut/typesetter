@@ -21,6 +21,9 @@ import {TypesetterItem} from './TypesetterItem.js';
 import {ObjectFactory} from './ObjectFactory.js';
 import {TextBox} from "./TextBox.js";
 
+
+export const PenaltyClass = 'Penalty';
+
 export const InfinitePenalty = 1000;
 export const BadPointForBreak = 20;
 export const ReallyBadPointForBreak = 200;
@@ -123,9 +126,9 @@ export class Penalty extends TypesetterItem {
     return this.itemToInsert?.getWidth() ?? 0;
   }
 
-  getExportObject() {
+  getExportObject(): Record<string, any> {
     const obj = super.getExportObject();
-    obj.class = 'Penalty';
+    obj.class = PenaltyClass;
     // including non-zero widths and heights
     // just in case a hypothetical descendant
     // of Penalty want to use them for anything
@@ -155,7 +158,7 @@ export class Penalty extends TypesetterItem {
     return obj;
   }
 
-  setFromObject(object: any, mergeValues: boolean): this {
+  setFromObject(object: Record<string, any>, mergeValues: boolean): this {
     super.setFromObject(object, mergeValues);
     // repeating width and height in the template so that they default to 0, not to -1 as in TypesetterItem
     const template = {width: 0, height: 0, penalty: 0, flagged: false};

@@ -20,6 +20,9 @@
 import {TypesetterItem} from './TypesetterItem.js';
 import * as TypesetterItemDirection from './TypesetterItemDirection.js';
 
+
+export const BoxClass = 'Box';
+
 /**
  * A rectangular area of a certain width and height.
  *
@@ -35,9 +38,9 @@ export class Box extends TypesetterItem {
     this.height = 0;
   }
 
-  getExportObject() {
+  getExportObject(): Record<string, any> {
     const obj = super.getExportObject();
-    obj.class = 'Box';
+    obj.class = BoxClass;
     return obj;
   }
 

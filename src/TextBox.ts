@@ -20,6 +20,9 @@ import {Box} from './Box.js';
 import * as TypesetterItemDirection from './TypesetterItemDirection.js';
 import {HyphenationLanguage} from "@/Hyphenator";
 
+
+export const TextBoxClass = 'TextBox';
+
 const defaultFontFamily = 'FreeSerif';
 const defaultFontSize = 16;
 
@@ -170,9 +173,9 @@ export class TextBox extends Box {
     this.height = -1;
   }
 
-  getExportObject() {
+  getExportObject(): Record<string, any> {
     const obj = super.getExportObject();
-    obj.class = 'TextBox';
+    obj.class = TextBoxClass;
     obj.text = this.text;
     obj.fontFamily = this.fontFamily;
     obj.fontSize = this.fontSize;
@@ -189,7 +192,7 @@ export class TextBox extends Box {
     return obj;
   }
 
-  setFromObject(object: any, mergeValues: boolean): this {
+  setFromObject(object: Record<string, any>, mergeValues: boolean): this {
     super.setFromObject(object, mergeValues);
     const template = {
       text: '', fontFamily: defaultFontFamily, fontSize: defaultFontSize, fontStyle: '', fontWeight: '', hyphenation: null,

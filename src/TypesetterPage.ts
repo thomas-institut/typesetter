@@ -20,6 +20,9 @@ import {TypesetterObject} from './TypesetterObject.js';
 import {ObjectFactory} from './ObjectFactory.js';
 import {TypesetterItem} from './TypesetterItem.js';
 
+
+export const TypesetterPageClass = 'TypesetterPage';
+
 /**
  * A typesetter page is a 2D surface of a certain width and height, an array of TypesetterItem to be rendered in the page, and some metadata
  *
@@ -58,9 +61,9 @@ export class TypesetterPage extends TypesetterObject {
     return this.items;
   }
 
-  getExportObject() {
+  getExportObject(): Record<string, any> {
     const obj = super.getExportObject();
-    obj.class = 'TypesetterPage';
+    obj.class = TypesetterPageClass;
     obj.width = this.width;
     obj.height = this.height;
     obj.items = this.items.map((item) => {
@@ -69,7 +72,7 @@ export class TypesetterPage extends TypesetterObject {
     return obj;
   }
 
-  setFromObject(object: any, mergeValues: boolean) {
+  setFromObject(object: Record<string, any>, mergeValues: boolean): this {
     super.setFromObject(object, mergeValues);
     const template = {width: 0, height: 0};
     this.copyValues(template, object, mergeValues);
