@@ -34,7 +34,7 @@ describe('Compact Item Array', () => {
       // check that source items are all non-merged items
       compacted.itemArray.forEach(item => {
         if (item.hasMetadata(MergedItem)) {
-          const sourceItems = (item.getMetadata(SourceItems) as object[])
+          (item.getMetadata(SourceItems) as object[])
           .map(si  => ObjectFactory.fromObject(si))
           .map(si => expect(si.hasMetadata(MergedItem)).toBe(false));
         }
@@ -58,7 +58,7 @@ describe('Compact Item Array', () => {
 
     const compacted = compactItemArray(info);
 
-    compacted.itemArray.forEach( (item, index) => {
+    compacted.itemArray.forEach( (item) => {
       if (item.hasMetadata(MergedItem)) {
         // expect(item.hasMetadata(TestMetadataKey)).toBe(false);
         (item.getMetadata(SourceItems) as object[]).map( si => ObjectFactory.fromObject(si) ).forEach( si => {

@@ -66,100 +66,96 @@ export class AddLineNumbers extends PageProcessor {
    * @param {TypesetterPage} page
    * @return {Promise<TypesetterPage>}
    */
-  process(page: TypesetterPage): Promise<TypesetterPage> {
-    return new Promise(async (resolve) => {
-      if (!page.hasMetadata(MetadataKey.MDK_MainTextLineData)) {
-        console.warn(`No main text line data available, line numbers not added`);
-        resolve(page);
+  async process(page: TypesetterPage): Promise<TypesetterPage> {
+    if (!page.hasMetadata(MetadataKey.MDK_MainTextLineData)) {
+      console.warn(`No main text line data available, line numbers not added`);
+      return page;
+    }
+
+    /** @var {MainTextLineData}mainTextLineData */
+    const mainTextLineData = page.getMetadata(MetadataKey.MDK_MainTextLineData) as MainTextLineData;
+    const mainTextIndex = mainTextLineData.mainTextListIndex;
+    if (mainTextIndex === -1) {
+      // no main text block, nothing to do
+      return page;
+    }
+
+
+    let lineNumberData: LineNumberData[] = deepCopy(mainTextLineData.lineData);
+    // determine lineNumberShift, a number that will be ADDED to
+    // the line number to determine the actual line number to show
+    let lineNumberShift = this.options.lineNumberShift;
+    if (this.options.resetEachPage) {
+      lineNumberShift -= (lineNumberData[0].lineNumber - 1);
+    }
+    lineNumberData = lineNumberData.map((dataItem) => {
+      dataItem.lineNumberToShow = dataItem.lineNumber + lineNumberShift;
+      return dataItem;
+    }).filter((dataItem) => {
+      if (this.options.showLineOne && dataItem.lineNumberToShow === 1) {
+        return true;
       }
-
-      /** @var {MainTextLineData}mainTextLineData */
-      const mainTextLineData = page.getMetadata(MetadataKey.MDK_MainTextLineData) as MainTextLineData;
-      const mainTextIndex = mainTextLineData.mainTextListIndex;
-      if (mainTextIndex === -1) {
-        // no main text block, nothing to do
-        resolve(page);
-        return;
-      }
-
-
-      let lineNumberData: LineNumberData[] = deepCopy(mainTextLineData.lineData);
-      // determine lineNumberShift, a number that will be ADDED to
-      // the line number to determine the actual line number to show
-      let lineNumberShift = this.options.lineNumberShift;
-      if (this.options.resetEachPage) {
-        lineNumberShift -= (lineNumberData[0].lineNumber - 1);
-      }
-      lineNumberData = lineNumberData.map((dataItem) => {
-        dataItem.lineNumberToShow = dataItem.lineNumber + lineNumberShift;
-        return dataItem;
-      }).filter((dataItem) => {
-        if (this.options.showLineOne && dataItem.lineNumberToShow === 1) {
-          return true;
-        }
-        return (dataItem.lineNumberToShow % this.options.frequency) === 0;
-      });
-      this.debug && console.log(`Updated line Number data`);
-      this.debug && console.log(lineNumberData);
-      if (lineNumberData.length === 0) {
-        // no lines with line number metadata, nothing to do
-        resolve(page);
-        return;
-      }
-
-      this.debug && console.log(`MainTextBlock at index ${mainTextIndex}`);
-      const mainTextList = page.getItems()[mainTextIndex];
-      // console.log(`mainTextList  (index ${mainTextIndex}`)
-      // console.log(mainTextList)
-      if (!(mainTextList instanceof ItemList)) {
-        throw new Error(`Main text block at index ${mainTextIndex} is not an ItemList`);
-      }
-      const mainTextListItems = mainTextList.getList();
-      const lineNumberList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
-      lineNumberList
-      .setShiftX(this.options.xPosition)
-      .setShiftY(mainTextList.getShiftY())
-      .addMetadata(MetadataKey.ListType, ListType.LineNumbersList);
-      let previousShiftYAdjustment = 0;
-      let previousLineHeight = 0;
-      let previousY = 0;
-      for (let i = 0; i < lineNumberData.length; i++) {
-        const dataItem = lineNumberData[i];
-
-        // add inter-number glue
-        const glueHeight = dataItem.y - previousY - previousLineHeight + previousShiftYAdjustment;
-        if (glueHeight !== 0) {
-          const glue = new Glue(TypesetterItemDirection.VerticalItemDirection);
-          glue.setHeight(glueHeight);
-          lineNumberList.pushItem(glue);
-        }
-
-        const lineNumberTextBox = TextBoxFactory.simpleText(this.getLineNumberString(dataItem.lineNumberToShow), {
-          fontFamily: this.options.fontFamily, fontSize: this.options.fontSize
-        });
-        // the number may be RTL, but alignments are calculated assuming LTR box placement
-        lineNumberTextBox.setTextDirection('ltr');
-
-        if (this.options.align === 'right') {
-          const boxWidth = await this.options.textBoxMeasurer.getBoxWidth(lineNumberTextBox);
-          lineNumberTextBox.setShiftX(-boxWidth);
-        }
-
-        const boxHeight = await this.options.textBoxMeasurer.getBoxHeight(lineNumberTextBox);
-        lineNumberTextBox.setHeight(boxHeight);
-        const lineHeight = mainTextListItems[dataItem.listIndex].getHeight();
-        if (boxHeight !== lineHeight) {
-          lineNumberTextBox.setShiftY(lineHeight - boxHeight);
-          previousShiftYAdjustment = lineHeight - boxHeight;
-        }
-        previousLineHeight = lineHeight;
-        previousY = dataItem.y;
-        lineNumberList.pushItem(lineNumberTextBox);
-      }
-      page.addItem(lineNumberList);
-
-      resolve(page);
+      return (dataItem.lineNumberToShow % this.options.frequency) === 0;
     });
+    this.debug && console.log(`Updated line Number data`);
+    this.debug && console.log(lineNumberData);
+    if (lineNumberData.length === 0) {
+      // no lines with line number metadata, nothing to do
+      return page;
+    }
+
+    this.debug && console.log(`MainTextBlock at index ${mainTextIndex}`);
+    const mainTextList = page.getItems()[mainTextIndex];
+    // console.log(`mainTextList  (index ${mainTextIndex}`)
+    // console.log(mainTextList)
+    if (!(mainTextList instanceof ItemList)) {
+      throw new Error(`Main text block at index ${mainTextIndex} is not an ItemList`);
+    }
+    const mainTextListItems = mainTextList.getList();
+    const lineNumberList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
+    lineNumberList
+    .setShiftX(this.options.xPosition)
+    .setShiftY(mainTextList.getShiftY())
+    .addMetadata(MetadataKey.ListType, ListType.LineNumbersList);
+    let previousShiftYAdjustment = 0;
+    let previousLineHeight = 0;
+    let previousY = 0;
+    for (let i = 0; i < lineNumberData.length; i++) {
+      const dataItem = lineNumberData[i];
+
+      // add inter-number glue
+      const glueHeight = dataItem.y - previousY - previousLineHeight + previousShiftYAdjustment;
+      if (glueHeight !== 0) {
+        const glue = new Glue(TypesetterItemDirection.VerticalItemDirection);
+        glue.setHeight(glueHeight);
+        lineNumberList.pushItem(glue);
+      }
+
+      const lineNumberTextBox = TextBoxFactory.simpleText(this.getLineNumberString(dataItem.lineNumberToShow), {
+        fontFamily: this.options.fontFamily, fontSize: this.options.fontSize
+      });
+      // the number may be RTL, but alignments are calculated assuming LTR box placement
+      lineNumberTextBox.setTextDirection('ltr');
+
+      if (this.options.align === 'right') {
+        const boxWidth = await this.options.textBoxMeasurer.getBoxWidth(lineNumberTextBox);
+        lineNumberTextBox.setShiftX(-boxWidth);
+      }
+
+      const boxHeight = await this.options.textBoxMeasurer.getBoxHeight(lineNumberTextBox);
+      lineNumberTextBox.setHeight(boxHeight);
+      const lineHeight = mainTextListItems[dataItem.listIndex].getHeight();
+      if (boxHeight !== lineHeight) {
+        lineNumberTextBox.setShiftY(lineHeight - boxHeight);
+        previousShiftYAdjustment = lineHeight - boxHeight;
+      }
+      previousLineHeight = lineHeight;
+      previousY = dataItem.y;
+      lineNumberList.pushItem(lineNumberTextBox);
+    }
+    page.addItem(lineNumberList);
+
+    return page;
   }
 
 

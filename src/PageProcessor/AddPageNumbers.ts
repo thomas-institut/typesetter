@@ -43,46 +43,44 @@ export class AddPageNumbers extends PageProcessor {
     this.debug && console.log(this.options);
   }
 
-  process(page: TypesetterPage): Promise<TypesetterPage> {
-    const thePage = super.process(page);
-    return new Promise(async (resolve) => {
-      const pageNumber = page.getMetadata(MetadataKey.PageNumber) as number;
-      if (pageNumber === undefined) {
-        // no page number, can't do anything
-        resolve(thePage);
-      }
+  async process(page: TypesetterPage): Promise<TypesetterPage> {
+    await super.process(page);
+    const pageNumber = page.getMetadata(MetadataKey.PageNumber) as number;
+    if (pageNumber === undefined) {
+      // no page number, can't do anything
+      return page;
+    }
 
-      this.debug && console.log(`Adding page numbers to page ${pageNumber}`);
-      let foliation = page.getMetadata(MetadataKey.PageFoliation) as string;
-      if (foliation === undefined) {
-        foliation = `${this._getPageNumberString(pageNumber)}`;
-      }
-      const pageNumberTextBox = TextBoxFactory.simpleText(foliation, {
-        fontFamily: this.options.fontFamily, fontSize: this.options.fontSize, fontStyle: this.options.fontStyle
-      });
-      const textHeight = await this.options.textBoxMeasurer.getBoxHeight(pageNumberTextBox);
-      pageNumberTextBox.setShiftY(this.options.marginTop)
-      .setHeight(textHeight)
-      .addMetadata(MetadataKey.ItemType, 'PageNumber');
-
-      switch (this.options.align) {
-        case 'center':
-          const boxWidth = await this.options.textBoxMeasurer.getBoxWidth(pageNumberTextBox);
-          pageNumberTextBox.setShiftX(this.options.marginLeft + this.options.lineWidth / 2 - boxWidth / 2);
-          break;
-
-        case 'left':
-          pageNumberTextBox.setShiftX(this.options.marginLeft);
-          break;
-
-        case 'right':
-          const textWidth = await this.options.textBoxMeasurer.getBoxWidth(pageNumberTextBox);
-          pageNumberTextBox.setShiftX(this.options.marginLeft + this.options.lineWidth - textWidth);
-      }
-
-      page.addItem(pageNumberTextBox);
-      resolve(thePage);
+    this.debug && console.log(`Adding page numbers to page ${pageNumber}`);
+    let foliation = page.getMetadata(MetadataKey.PageFoliation) as string;
+    if (foliation === undefined) {
+      foliation = `${this._getPageNumberString(pageNumber)}`;
+    }
+    const pageNumberTextBox = TextBoxFactory.simpleText(foliation, {
+      fontFamily: this.options.fontFamily, fontSize: this.options.fontSize, fontStyle: this.options.fontStyle
     });
+    const textHeight = await this.options.textBoxMeasurer.getBoxHeight(pageNumberTextBox);
+    pageNumberTextBox.setShiftY(this.options.marginTop)
+    .setHeight(textHeight)
+    .addMetadata(MetadataKey.ItemType, 'PageNumber');
+
+    switch (this.options.align) {
+      case 'center':
+        { const boxWidth = await this.options.textBoxMeasurer.getBoxWidth(pageNumberTextBox);
+        pageNumberTextBox.setShiftX(this.options.marginLeft + this.options.lineWidth / 2 - boxWidth / 2);
+        break; }
+
+      case 'left':
+        pageNumberTextBox.setShiftX(this.options.marginLeft);
+        break;
+
+      case 'right':
+        { const textWidth = await this.options.textBoxMeasurer.getBoxWidth(pageNumberTextBox);
+        pageNumberTextBox.setShiftX(this.options.marginLeft + this.options.lineWidth - textWidth); }
+    }
+
+    page.addItem(pageNumberTextBox);
+    return page;
   }
 
   /**

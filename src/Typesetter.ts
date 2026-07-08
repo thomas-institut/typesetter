@@ -19,6 +19,7 @@
 import {ItemList} from './ItemList.js';
 import * as TypesetterItemDirection from './TypesetterItemDirection.js';
 import {TypesetterDocument} from './TypesetterDocument.js';
+import {Dimension} from "@/Dimension";
 
 /**
  * The new typesetter class
@@ -34,22 +35,19 @@ export class Typesetter {
   }
 
   static cm2px(cm: number): number {
-    return cm * 37.795275590551184; //   = mm * 96 [px/in] / 2.54 [cm/in]
+    return Dimension.cm2px(cm);
   }
 
   static px2cm(px: number): number {
-    return px / 37.795275590551184; //   = px * 1/96 [in/px] * 2.54 [cm/in]
+    return Dimension.px2cm(px);
   }
 
   static pt2px(pt: number): number {
-    return pt * 4 / 3;  // = pt * 72 [pt/in] *  1/96 [in/px]
+    return Dimension.pt2px(pt);
   }
 
-
-  // Unit conversion methods
-
   static px2pt(px: number): number {
-    return px * 3 / 4;
+    return Dimension.px2pt(px);
   }
 
   /**

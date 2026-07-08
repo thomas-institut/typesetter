@@ -67,7 +67,7 @@ export class AddMainTextLinePositionMetadata extends PageProcessor {
     const pageItems = page.getItems();
     const mainTextIndex = pageItems.map((item) => {
       return item.hasMetadata(MetadataKey.ListType) ? item.getMetadata(MetadataKey.ListType) : 'undefined';
-    }).indexOf(ListType.MainTextBlockList);
+    }).indexOf(this.options.listTypeToNumber);
     if (mainTextIndex === -1) {
       // no main text block, nothing to do
       page.addMetadata(MetadataKey.MDK_MainTextLineData, {mainTextListIndex: -1, lineData: {}});
@@ -110,7 +110,7 @@ export class AddMainTextLinePositionMetadata extends PageProcessor {
       this.debug && console.log(`linesWithNumberIndices`);
       this.debug && console.log(linesWithNumberIndices);
 
-      const yPositions = this._getYPositions(mainTextListItems);
+      const yPositions = this.getYPositions(mainTextListItems);
 
       const data: LinePositionData[] = [];
       linesWithNumberIndices.forEach((index) => {
@@ -124,7 +124,7 @@ export class AddMainTextLinePositionMetadata extends PageProcessor {
     return page;
   }
 
-  _getYPositions(items: TypesetterItem[]): number[] {
+  private getYPositions(items: TypesetterItem[]): number[] {
     const yPositions: number[] = [];
     let currentY = 0;
     items.forEach((item) => {

@@ -63,104 +63,97 @@ export class AddMarginalia extends PageProcessor {
     this.debug && console.log(this.options);
   }
 
-  process(page: TypesetterPage): Promise<TypesetterPage> {
-    return new Promise(async (resolve) => {
+  async process(page: TypesetterPage): Promise<TypesetterPage> {
+    this.debug = false;
+    if (!page.hasMetadata(MetadataKey.MDK_PageMarginalia)) {
+      return page;
+    }
+    let pageMarginalia: PageMarginalia[] = page.getMetadata(MetadataKey.MDK_PageMarginalia) as PageMarginalia[];
+    // console.log(`Page marginalia`, pageMarginalia);
+    if (pageMarginalia.length === 0) {
+      return page;
+    }
+    this.debug && console.log(`Page marginalia`, pageMarginalia);
+    if (!page.hasMetadata(MetadataKey.MDK_MainTextLineData)) {
+      console.warn(`No main text line data available, marginalia not added`);
+      return page;
+    }
+    this.debug && console.log(`Processing marginalia for page ${page.getMetadata(MetadataKey.PageNumber)}`);
+    const mainTextLineData: MainTextLineData = page.getMetadata(MetadataKey.MDK_MainTextLineData) as MainTextLineData;
+    const mainTextIndex = mainTextLineData.mainTextListIndex;
+    if (mainTextIndex === -1) {
+      // no main text block, nothing to do
+      this.debug && console.log(`No main text block, nothing to do`);
+      return page;
+    }
+    const mainTextList = page.getItems()[mainTextIndex] as ItemList;
+    const mainTextListItems = mainTextList.getList();
+    const lineNumbers = mainTextLineData.lineData.map(ld => ld.lineNumber);
 
-      this.debug = false;
-      if (!page.hasMetadata(MetadataKey.MDK_PageMarginalia)) {
-        resolve(page);
-        return;
-      }
-      let pageMarginalia: PageMarginalia[] = page.getMetadata(MetadataKey.MDK_PageMarginalia) as PageMarginalia[];
-      // console.log(`Page marginalia`, pageMarginalia);
-      if (pageMarginalia.length === 0) {
-        resolve(page);
-        return;
-      }
-      this.debug && console.log(`Page marginalia`, pageMarginalia);
-      if (!page.hasMetadata(MetadataKey.MDK_MainTextLineData)) {
-        console.warn(`No main text line data available, marginalia not added`);
-        resolve(page);
-        return;
-      }
-      this.debug && console.log(`Processing marginalia for page ${page.getMetadata(MetadataKey.PageNumber)}`);
-      const mainTextLineData: MainTextLineData = page.getMetadata(MetadataKey.MDK_MainTextLineData) as MainTextLineData;
-      const mainTextIndex = mainTextLineData.mainTextListIndex;
-      if (mainTextIndex === -1) {
-        // no main text block, nothing to do
-        this.debug && console.log(`No main text block, nothing to do`);
-        resolve(page);
-        return;
-      }
-      const mainTextList = page.getItems()[mainTextIndex] as ItemList;
-      const mainTextListItems = mainTextList.getList();
-      const lineNumbers = mainTextLineData.lineData.map(ld => ld.lineNumber);
-
-      pageMarginalia = pageMarginalia.map((marginaliaEntry) => {
-        const lineDataIndex = lineNumbers.indexOf(marginaliaEntry.lineNumber);
-        marginaliaEntry.lineData = mainTextLineData.lineData[lineDataIndex];
-        return marginaliaEntry;
-      });
-      const marginaliaList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
-      marginaliaList
-      .setShiftX(this.options.xPosition)
-      .setShiftY(mainTextList.getShiftY())
-      .addMetadata(MetadataKey.ListType, ListType.MarginaliaList);
-      let previousShiftYAdjustment = 0;
-      let previousLineHeight = 0;
-      let previousY = 0;
-
-      for (let i = 0; i < pageMarginalia.length; i++) {
-        // this.debug && console.log(`Processing marginalia entry ${i}`)
-        const lineNumberData = pageMarginalia[i].lineData;
-        this.debug && console.log(`Previous Y: ${previousY}, line height: ${previousLineHeight}, shiftY: ${previousShiftYAdjustment}`);
-
-        // add inter marginalia glue
-        const glueHeight = lineNumberData.y - previousY - previousLineHeight + previousShiftYAdjustment;
-        if (glueHeight !== 0) {
-          const glue = new Glue(TypesetterItemDirection.VerticalItemDirection);
-          glue.setHeight(glueHeight);
-          marginaliaList.pushItem(glue);
-          this.debug && console.log(`Adding inter marginalia glue ${glueHeight}`);
-        }
-
-        let marginalItemArray: TypesetterItem[] = [];
-        for (let j = 0; j < pageMarginalia[i].marginalSubEntries.length; j++) {
-          marginalItemArray.push(...pageMarginalia[i].marginalSubEntries[j]);
-          if (j !== pageMarginalia[i].marginalSubEntries.length - 1) {
-            const interMarginGlue = new Glue();
-            // TODO: make this glue size an option
-            interMarginGlue.setWidth(5);
-            marginalItemArray.push(interMarginGlue);
-          }
-        }
-
-        marginalItemArray = marginalItemArray.map((item) => {
-          item.setTextDirection(this.options.defaultTextDirection);
-          return item;
-        });
-
-        await ItemArray.measureTextBoxes(marginalItemArray, this.options.textBoxMeasurer);
-        const entryList = new ItemList(TypesetterItemDirection.HorizontalItemDirection);
-        entryList.setList(marginalItemArray)
-        .setTextDirection(this.options.defaultTextDirection);
-        if (this.options.align === 'right') {
-          entryList.setShiftX(-entryList.getWidth());
-        }
-        const listHeight = entryList.getHeight();
-        entryList.setHeight(listHeight);
-        const lineHeight = mainTextListItems[lineNumberData.listIndex].getHeight();
-        this.debug && console.log(`List height: ${listHeight}, Line height: ${lineHeight}, shiftY: ${previousShiftYAdjustment}`);
-        if (listHeight !== lineHeight) {
-          entryList.setShiftY(lineHeight - listHeight);
-          previousShiftYAdjustment = lineHeight - listHeight;
-        }
-        previousLineHeight = lineHeight;
-        previousY = lineNumberData.y;
-        marginaliaList.pushItem(entryList);
-      }
-      page.addItem(marginaliaList);
-      resolve(page);
+    pageMarginalia = pageMarginalia.map((marginaliaEntry) => {
+      const lineDataIndex = lineNumbers.indexOf(marginaliaEntry.lineNumber);
+      marginaliaEntry.lineData = mainTextLineData.lineData[lineDataIndex];
+      return marginaliaEntry;
     });
+    const marginaliaList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
+    marginaliaList
+    .setShiftX(this.options.xPosition)
+    .setShiftY(mainTextList.getShiftY())
+    .addMetadata(MetadataKey.ListType, ListType.MarginaliaList);
+    let previousShiftYAdjustment = 0;
+    let previousLineHeight = 0;
+    let previousY = 0;
+
+    for (let i = 0; i < pageMarginalia.length; i++) {
+      // this.debug && console.log(`Processing marginalia entry ${i}`)
+      const lineNumberData = pageMarginalia[i].lineData;
+      this.debug && console.log(`Previous Y: ${previousY}, line height: ${previousLineHeight}, shiftY: ${previousShiftYAdjustment}`);
+
+      // add inter marginalia glue
+      const glueHeight = lineNumberData.y - previousY - previousLineHeight + previousShiftYAdjustment;
+      if (glueHeight !== 0) {
+        const glue = new Glue(TypesetterItemDirection.VerticalItemDirection);
+        glue.setHeight(glueHeight);
+        marginaliaList.pushItem(glue);
+        this.debug && console.log(`Adding inter marginalia glue ${glueHeight}`);
+      }
+
+      let marginalItemArray: TypesetterItem[] = [];
+      for (let j = 0; j < pageMarginalia[i].marginalSubEntries.length; j++) {
+        marginalItemArray.push(...pageMarginalia[i].marginalSubEntries[j]);
+        if (j !== pageMarginalia[i].marginalSubEntries.length - 1) {
+          const interMarginGlue = new Glue();
+          // TODO: make this glue size an option
+          interMarginGlue.setWidth(5);
+          marginalItemArray.push(interMarginGlue);
+        }
+      }
+
+      marginalItemArray = marginalItemArray.map((item) => {
+        item.setTextDirection(this.options.defaultTextDirection);
+        return item;
+      });
+
+      await ItemArray.measureTextBoxes(marginalItemArray, this.options.textBoxMeasurer);
+      const entryList = new ItemList(TypesetterItemDirection.HorizontalItemDirection);
+      entryList.setList(marginalItemArray)
+      .setTextDirection(this.options.defaultTextDirection);
+      if (this.options.align === 'right') {
+        entryList.setShiftX(-entryList.getWidth());
+      }
+      const listHeight = entryList.getHeight();
+      entryList.setHeight(listHeight);
+      const lineHeight = mainTextListItems[lineNumberData.listIndex].getHeight();
+      this.debug && console.log(`List height: ${listHeight}, Line height: ${lineHeight}, shiftY: ${previousShiftYAdjustment}`);
+      if (listHeight !== lineHeight) {
+        entryList.setShiftY(lineHeight - listHeight);
+        previousShiftYAdjustment = lineHeight - listHeight;
+      }
+      previousLineHeight = lineHeight;
+      previousY = lineNumberData.y;
+      marginaliaList.pushItem(entryList);
+    }
+    page.addItem(marginaliaList);
+    return page;
   }
 }

@@ -72,7 +72,7 @@ export class TypesetterObject {
   }
 
   hasMetadata(key: string): boolean {
-    return this.metadata.hasOwnProperty(key);
+    return this.metadata[key] !== undefined;
   }
 
   /**
@@ -84,9 +84,9 @@ export class TypesetterObject {
    */
   protected copyValues(template: { [key: string]: any; }, inputObject: { [key: string]: any; }, mergeValues: boolean) {
     Object.keys(template).forEach((key) => {
-      // @ts-ignore
+      // @ts-expect-error using string key
       const defaultValue = mergeValues ? this[key] : template[key];
-      // @ts-ignore
+      // @ts-expect-error using string key
       this[key] = inputObject[key] !== undefined ? inputObject[key] : defaultValue;
     });
   }
