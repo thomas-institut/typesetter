@@ -48,7 +48,7 @@ import {HyphenationLanguage} from "@/Hyphenator";
 import {toFixedPrecision} from "./toolbox/Util";
 
 export const BasicTypesetterSignature = 'BasicTypesetter';
-export const BasicTypesetterVersion = '1.0.4';
+export const BasicTypesetterVersion = '1.0.5';
 
 // Typesetting defaults
 
