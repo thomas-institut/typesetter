@@ -442,32 +442,14 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
   }
 
   /**
-   * Typesets a list of paragraphs into a document.
+   * Typesets a vertical list of paragraphs, vertical glue and penalties.
    *
-   * Each vertical item in the input list must be either a horizontal list
-   * containing a paragraph, vertical glue or a penalty
-   *
-   * A paragraph is a single horizontal list containing text and
-   * inter-word glue. The typesetter will convert each paragraph into
-   * a vertical list with the paragraph properly split into lines
-   * Then, all paragraph lines and vertical glue will be put together and
-   * broken into pages.
-   *
-   * The optional extraData parameter may contain apparatuses, footnotes
-   * and end notes that must be typeset together with the main text. The typesetter
-   * will call the getApparatusListToTypeset given in the constructor options
-   * when needed.
-   *
+   * @param mainTextList the vertical list to typeset
+   * @return the typeset vertical list
+   * @private
    */
-  async typeset(mainTextList: ItemList, extraData: BasicTypesetterData<ApparatusType> = {}): Promise<TypesetterDocument> {
-    if (mainTextList.getDirection() !== TypesetterItemDirection.VerticalItemDirection) {
-      throw new Error(`Cannot typeset a non-vertical list`);
-    }
-    // 1. Create a vertical list to be typeset
-    let mainTextVerticalList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
-    //
-    // 2. Typeset the main text
-    //
+  private async typesetMainText(mainTextList: ItemList): Promise<ItemList> {
+    const mainTextVerticalList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
     let paragraphNumber = 0;
     for (const mainTextListItem of mainTextList.getList()) {
       if (mainTextListItem instanceof Glue) {
@@ -505,14 +487,42 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
       console.warn(`Ignoring non-supported item while building main text vertical list`, mainTextListItem);
     }
     // set any inter-line glue that still not set, normally, inter-line glue between paragraphs
-    mainTextVerticalList = this.setUnsetInterLineGlue(mainTextVerticalList);
+    const listWithSetInterLineGlue = this.setUnsetInterLineGlue(mainTextVerticalList);
     // add absolute line numbers metadata to text lines
-    mainTextVerticalList = this.addAbsoluteLineNumberMetadata(mainTextVerticalList);
-    mainTextVerticalList.addMetadata(MetadataKey.ListType, ListType.MainTextBlockList);
+    const listWithLineNumbers = this.addAbsoluteLineNumberMetadata(listWithSetInterLineGlue);
+    listWithLineNumbers.addMetadata(MetadataKey.ListType, ListType.MainTextBlockList);
+    return listWithLineNumbers;
+  }
 
+  /**
+   * Typesets a list of paragraphs into a document.
+   *
+   * Each vertical item in the input list must be either a horizontal list
+   * containing a paragraph, vertical glue or a penalty
+   *
+   * A paragraph is a single horizontal list containing text and
+   * inter-word glue. The typesetter will convert each paragraph into
+   * a vertical list with the paragraph properly split into lines
+   * Then, all paragraph lines and vertical glue will be put together and
+   * broken into pages.
+   *
+   * The optional extraData parameter may contain apparatuses, footnotes
+   * and end notes that must be typeset together with the main text. The typesetter
+   * will call the getApparatusListToTypeset given in the constructor options
+   * when needed.
+   *
+   */
+  async typeset(mainTextList: ItemList, extraData: BasicTypesetterData<ApparatusType> = {}): Promise<TypesetterDocument> {
+    if (mainTextList.getDirection() !== TypesetterItemDirection.VerticalItemDirection) {
+      throw new Error(`Cannot typeset a non-vertical list`);
+    }
+    //
+    // 1. Typeset the main text
+    //
+    const mainTextVerticalList = await this.typesetMainText(mainTextList);
 
     //
-    // 3. Break the main text into pages
+    // 2. Break the main text into pages
     //
     let thePages = [];
     const doc = new TypesetterDocument();
@@ -705,7 +715,9 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
 
     const mainTextPageCount = thePages.length;
     if (extraData.endNoteApparatus !== undefined) {
-      const endNotesVerticalList = await this.options.getEndNotesVerticalListToTypeset(extraData.endNoteApparatus, thePages);
+      const endNotesVerticalList = await this.typesetMainText(
+        await this.options.getEndNotesVerticalListToTypeset(extraData.endNoteApparatus, thePages)
+      );
       const endNotesPageList = await this.typesetVerticalList(endNotesVerticalList);
       const endNotesPages = endNotesPageList.getList().map((pageItemList, pageIndex) => {
         pageItemList

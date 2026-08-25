@@ -287,9 +287,7 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
 
       const endNotes = new ItemList(VerticalItemDirection);
       for (let i = 0; i < 8; i++) {
-        const line = new ItemList(HorizontalItemDirection).setHeight(16).setWidth(90);
-        line.pushItem(TextBoxFactory.simpleText(`ENDNOTE-${apparatus.id}-${i}`));
-        endNotes.pushItem(line);
+        endNotes.pushItem(makeParagraph(`ENDNOTE-${apparatus.id}-${i} content`));
         endNotes.pushItem(new Glue(VerticalItemDirection).setHeight(4).setWidth(90));
       }
       return endNotes;
@@ -329,7 +327,34 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
     });
   });
 
-  it('C4: typeset places apparatuses at page foot when apparatusesAtEndOfDocument is false', async () => {
+  it('C4: typeset fully typesets endnote paragraphs before pagination', async () => {
+    const endNoteApparatus = {id: 'endnotes'};
+    const getEndNotesVerticalListToTypeset = vi.fn(async () => {
+      const endNotes = new ItemList(VerticalItemDirection);
+      endNotes.pushItem(makeParagraph('This endnote paragraph has content.'));
+      endNotes.pushItem(new Glue(VerticalItemDirection).setHeight(4));
+      endNotes.pushItem(makeParagraph('A second endnote paragraph has content.'));
+      return endNotes;
+    });
+    const typesetter = makeTypesetter({
+      pageWidth: 120,
+      pageHeight: 100,
+      getEndNotesVerticalListToTypeset,
+    });
+    const mainTextList = new ItemList(VerticalItemDirection);
+    mainTextList.pushItem(makeParagraph('MAIN'));
+
+    const doc = await typesetter.typeset(mainTextList, {endNoteApparatus});
+
+    const endNoteLines = doc.getPages().slice(1).flatMap((page) => getLineItems(getMainTextBlock(page.getItems())));
+    expect(endNoteLines.length).toBeGreaterThan(1);
+    endNoteLines.forEach((line) => {
+      expect(line.getMetadata(MetadataKey.LineType)).toBe(LineType.MainTextLine);
+      expect(line.hasMetadata(MetadataKey.ParagraphNumber)).toBe(true);
+    });
+  });
+
+  it('C5: typeset places apparatuses at page foot when apparatusesAtEndOfDocument is false', async () => {
     const apparatuses = [{id: 'app-1'}];
     const getApparatusListToTypeset = vi.fn(async (_mainTextVerticalList: ItemList, app: {id: string}) => {
       const list = new ItemList(HorizontalItemDirection);
@@ -369,7 +394,7 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
     expect(pageHasMainTextAndApparatus).toBe(true);
   });
 
-  it('C5: preTypesetApparatuses hook is called once with apparatus list', async () => {
+  it('C6: preTypesetApparatuses hook is called once with apparatus list', async () => {
     const apparatuses = [{id: 'a1'}, {id: 'a2'}];
     const preTypesetApparatuses = vi.fn(async (_apps: {id: string}[]) => true);
     const getApparatusListToTypeset = vi.fn(async (_mainTextVerticalList: ItemList) => {
