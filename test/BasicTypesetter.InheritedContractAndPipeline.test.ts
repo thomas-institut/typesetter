@@ -15,6 +15,7 @@ import * as ListType from "@/ListType";
 import * as LineType from "@/LineType";
 import * as GlueType from "@/GlueType";
 import {FirstFitLineBreaker} from "@/LineBreaker/FirstFitLineBreaker";
+import {PageProcessor} from "@/PageProcessor";
 
 function makeTypesetter(options: Record<string, any> = {}) {
   const textBoxMeasurer = options.textBoxMeasurer ?? new TextBoxMeasurer();
@@ -275,6 +276,8 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
 
   it('C3: typeset appends multi-page endnotes after the completed main text pages', async () => {
     const endNoteApparatus = {id: 'endnotes'};
+    const mainTextOnlyProcessor = new PageProcessor();
+    const processMainTextOnlyPage = vi.spyOn(mainTextOnlyProcessor, 'process');
     let pageCountSeenByCallback = 0;
     let firstPageSeenByCallback: TypesetterPage | undefined;
     const getEndNotesVerticalListToTypeset = vi.fn(async (apparatus: {id: string}, pages: TypesetterPage[]) => {
@@ -294,8 +297,10 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
     const typesetter = makeTypesetter({
       pageWidth: 240,
       pageHeight: 120,
+      showPageNumbers: true,
       getEndNotesVerticalListToTypeset,
     });
+    typesetter.addPageOutputProcessor(mainTextOnlyProcessor);
     const mainTextList = new ItemList(VerticalItemDirection);
     mainTextList.pushItem(makeParagraph('MAIN'));
 
@@ -305,6 +310,7 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
     expect(pageCountSeenByCallback).toBeGreaterThan(0);
     expect(firstPageSeenByCallback).toBeInstanceOf(TypesetterPage);
     expect(doc.getPageCount()).toBeGreaterThan(2);
+    expect(processMainTextOnlyPage).toHaveBeenCalledTimes(pageCountSeenByCallback);
     expect(doc.getPages().map((page) => page.getMetadata(MetadataKey.PageNumber)))
       .toEqual(doc.getPages().map((_page, index) => index + 1));
 
@@ -316,6 +322,11 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
     expect(endNotePageIndexes.length).toBeGreaterThan(1);
     expect(Math.min(...endNotePageIndexes)).toBe(pageCountSeenByCallback);
     expect(new Set(endNotePageIndexes).size).toBeGreaterThan(1);
+    endNotePageIndexes.forEach((pageIndex) => {
+      expect(doc.getPages()[pageIndex].getItems().some((item) => {
+        return item.getMetadata(MetadataKey.ItemType) === 'PageNumber';
+      })).toBe(true);
+    });
   });
 
   it('C4: typeset places apparatuses at page foot when apparatusesAtEndOfDocument is false', async () => {

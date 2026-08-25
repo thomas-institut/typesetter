@@ -48,7 +48,7 @@ import {HyphenationLanguage} from "@/Hyphenator";
 import {toFixedPrecision} from "./toolbox/Util";
 
 export const BasicTypesetterSignature = 'BasicTypesetter';
-export const BasicTypesetterVersion = '1.0.5';
+export const BasicTypesetterVersion = '1.1.1';
 
 // Typesetting defaults
 
@@ -143,6 +143,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
   private readonly minLineSkip: number;
   private debug: boolean;
   private pageOutputProcessors: PageProcessor[] = [];
+  private pageNumberProcessor: PageProcessor | null = null;
 
   constructor(options: BasicTypesetterOptions<ApparatusType>) {
     super();
@@ -200,7 +201,8 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
       const defaultMargin = Typesetter.cm2px(0.5);
       const defaultPosition = 'bottom';
       const pageNumberOptions = {...pageNumberOptionsDefaults, ...this.options.pageNumbersOptions};
-      this.addPageOutputProcessor(this.constructAddPageNumberProcessor(pageNumberOptions, defaultMargin, defaultPosition));
+      this.pageNumberProcessor = this.constructAddPageNumberProcessor(pageNumberOptions, defaultMargin, defaultPosition);
+      this.addPageOutputProcessor(this.pageNumberProcessor);
     }
 
     this.addPageOutputProcessor(new AddMainTextLinePositionMetadata());
@@ -701,6 +703,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
 
     }
 
+    const mainTextPageCount = thePages.length;
     if (extraData.endNoteApparatus !== undefined) {
       const endNotesVerticalList = await this.options.getEndNotesVerticalListToTypeset(extraData.endNoteApparatus, thePages);
       const endNotesPageList = await this.typesetVerticalList(endNotesVerticalList);
@@ -716,14 +719,16 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
       thePages.push(...endNotesPages);
     }
 
-
     // Apply page processors
     const processedPages = [];
     for (let pageIndex = 0; pageIndex < thePages.length; pageIndex++) {
       let processedPage = thePages[pageIndex];
-      for (let processorIndex = 0; processorIndex < this.pageOutputProcessors.length; processorIndex++) {
+      const pageProcessors = pageIndex < mainTextPageCount
+        ? this.pageOutputProcessors
+        : this.pageNumberProcessor === null ? [] : [this.pageNumberProcessor];
+      for (let processorIndex = 0; processorIndex < pageProcessors.length; processorIndex++) {
         // this.debug && console.log(`Applying page output processor ${processorIndex}`)
-        processedPage = await this.pageOutputProcessors[processorIndex].process(processedPage);
+        processedPage = await pageProcessors[processorIndex].process(processedPage);
       }
       processedPages.push(processedPage);
     }
