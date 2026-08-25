@@ -5,9 +5,11 @@ import {createItemArrayFromString} from "@/ItemArrayFromString";
 import {HorizontalItemDirection, VerticalItemDirection} from "@/TypesetterItemDirection";
 import {TextBoxMeasurer} from "@/TextBoxMeasurer/TextBoxMeasurer";
 import {TypesetterItem} from "@/TypesetterItem";
+import {TypesetterPage} from "@/TypesetterPage";
 import {Glue} from "@/Glue";
 import {Penalty} from "@/Penalty";
 import {TextBoxFactory} from "@/TextBoxFactory";
+import {TextBox} from "@/TextBox";
 import * as MetadataKey from "@/MetadataKey";
 import * as ListType from "@/ListType";
 import * as LineType from "@/LineType";
@@ -53,6 +55,18 @@ function getLineItems(verticalList: ItemList): ItemList[] {
   return verticalList.getList().filter((item) => {
     return item instanceof ItemList && item.getMetadata(MetadataKey.LineType) === LineType.MainTextLine;
   }) as ItemList[];
+}
+
+function getTextFromItems(items: TypesetterItem[]): string {
+  return items.map((item) => {
+    if (item instanceof ItemList) {
+      return getTextFromItems(item.getList());
+    }
+    if (item instanceof TextBox) {
+      return item.getText();
+    }
+    return '';
+  }).join('');
 }
 
 describe('BasicTypesetter inherited contract and pipeline', () => {
@@ -259,7 +273,52 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
     expect(hasTextToApparatusGlue).toBe(true);
   });
 
-  it('C3: typeset places apparatuses at page foot when apparatusesAtEndOfDocument is false', async () => {
+  it('C3: typeset appends multi-page endnotes after the completed main text pages', async () => {
+    const endNoteApparatus = {id: 'endnotes'};
+    let pageCountSeenByCallback = 0;
+    let firstPageSeenByCallback: TypesetterPage | undefined;
+    const getEndNotesVerticalListToTypeset = vi.fn(async (apparatus: {id: string}, pages: TypesetterPage[]) => {
+      pageCountSeenByCallback = pages.length;
+      firstPageSeenByCallback = pages[0];
+      expect(apparatus).toBe(endNoteApparatus);
+
+      const endNotes = new ItemList(VerticalItemDirection);
+      for (let i = 0; i < 8; i++) {
+        const line = new ItemList(HorizontalItemDirection).setHeight(16).setWidth(90);
+        line.pushItem(TextBoxFactory.simpleText(`ENDNOTE-${apparatus.id}-${i}`));
+        endNotes.pushItem(line);
+        endNotes.pushItem(new Glue(VerticalItemDirection).setHeight(4).setWidth(90));
+      }
+      return endNotes;
+    });
+    const typesetter = makeTypesetter({
+      pageWidth: 240,
+      pageHeight: 120,
+      getEndNotesVerticalListToTypeset,
+    });
+    const mainTextList = new ItemList(VerticalItemDirection);
+    mainTextList.pushItem(makeParagraph('MAIN'));
+
+    const doc = await typesetter.typeset(mainTextList, {endNoteApparatus});
+
+    expect(getEndNotesVerticalListToTypeset).toHaveBeenCalledTimes(1);
+    expect(pageCountSeenByCallback).toBeGreaterThan(0);
+    expect(firstPageSeenByCallback).toBeInstanceOf(TypesetterPage);
+    expect(doc.getPageCount()).toBeGreaterThan(2);
+    expect(doc.getPages().map((page) => page.getMetadata(MetadataKey.PageNumber)))
+      .toEqual(doc.getPages().map((_page, index) => index + 1));
+
+    const pageTexts = doc.getPages().map((page) => getTextFromItems(page.getItems()));
+    expect(getLineItems(getMainTextBlock(doc.getPages()[0].getItems())).length).toBeGreaterThan(0);
+    const endNotePageIndexes = pageTexts
+      .map((text, index) => text.includes('ENDNOTE-endnotes-') ? index : -1)
+      .filter((index) => index !== -1);
+    expect(endNotePageIndexes.length).toBeGreaterThan(1);
+    expect(Math.min(...endNotePageIndexes)).toBe(pageCountSeenByCallback);
+    expect(new Set(endNotePageIndexes).size).toBeGreaterThan(1);
+  });
+
+  it('C4: typeset places apparatuses at page foot when apparatusesAtEndOfDocument is false', async () => {
     const apparatuses = [{id: 'app-1'}];
     const getApparatusListToTypeset = vi.fn(async (_mainTextVerticalList: ItemList, app: {id: string}) => {
       const list = new ItemList(HorizontalItemDirection);
@@ -299,7 +358,7 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
     expect(pageHasMainTextAndApparatus).toBe(true);
   });
 
-  it('C4: preTypesetApparatuses hook is called once with apparatus list', async () => {
+  it('C5: preTypesetApparatuses hook is called once with apparatus list', async () => {
     const apparatuses = [{id: 'a1'}, {id: 'a2'}];
     const preTypesetApparatuses = vi.fn(async (_apps: {id: string}[]) => true);
     const getApparatusListToTypeset = vi.fn(async (_mainTextVerticalList: ItemList) => {
