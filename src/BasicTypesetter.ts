@@ -79,9 +79,13 @@ interface LineRangeData {
   penalty: number;
 }
 
-interface BasicTypesetterExtraData<ApparatusType> {
+export interface BasicTypesetterData<ApparatusType> {
   apparatuses?: ApparatusType[];
+  /** An apparatus to typeset after the final main-text page. */
+  endNoteApparatus?: ApparatusType;
 }
+
+export type BasicTypesetterExtraData<ApparatusType> = BasicTypesetterData<ApparatusType>;
 
 export interface Marginalia {
   lineNumber: number;
@@ -114,6 +118,11 @@ export interface BasicTypesetterOptions<ApparatusType> {
    * It must return a Promise to a horizontal ItemList to typeset and add at the end of the page
    */
   getApparatusListToTypeset?: (mainTextVerticalList: ItemList, apparatus: ApparatusType, lineFrom: number, lineTo: number, resetFirstLine: boolean) => Promise<ItemList>;
+  /**
+   * A function to generate the vertical list for an endnotes apparatus.
+   * The generated list is split into pages and appended after the main text pages.
+   */
+  getEndNotesVerticalListToTypeset?: (endNotesApparatus: ApparatusType, page: TypesetterPage[]) => Promise<ItemList>;
   getMarginaliaForLineRange?: (lineFrom: number, lineTo: number) => Marginalia[];
   preTypesetApparatuses?: (apparatuses: ApparatusType[]) => Promise<boolean>;
   textToApparatusGlue?: {
@@ -158,6 +167,9 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
       apparatusesAtEndOfDocument: false,
       getApparatusListToTypeset: async () => {
         return new ItemList();
+      },
+      getEndNotesVerticalListToTypeset: async () => {
+        return new ItemList(TypesetterItemDirection.VerticalItemDirection);
       },
       getMarginaliaForLineRange: (_lineFrom: number, _lineTo: number): Marginalia[] => {
         return [];
@@ -445,7 +457,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
    * when needed.
    *
    */
-  async typeset(mainTextList: ItemList, extraData: BasicTypesetterExtraData<ApparatusType> = {}): Promise<TypesetterDocument> {
+  async typeset(mainTextList: ItemList, extraData: BasicTypesetterData<ApparatusType> = {}): Promise<TypesetterDocument> {
     if (mainTextList.getDirection() !== TypesetterItemDirection.VerticalItemDirection) {
       throw new Error(`Cannot typeset a non-vertical list`);
     }
@@ -687,6 +699,21 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
       this.debug && console.log(`Page Typesetting Data`);
       this.debug && console.log(pageTypesettingData);
 
+    }
+
+    if (extraData.endNoteApparatus !== undefined) {
+      const endNotesVerticalList = await this.options.getEndNotesVerticalListToTypeset(extraData.endNoteApparatus, thePages);
+      const endNotesPageList = await this.typesetVerticalList(endNotesVerticalList);
+      const endNotesPages = endNotesPageList.getList().map((pageItemList, pageIndex) => {
+        pageItemList
+          .setShiftX(this.options.marginLeft)
+          .setShiftY(this.options.marginTop)
+          .addMetadata(MetadataKey.ListType, ListType.MainTextBlockList);
+        const page = new TypesetterPage(this.options.pageWidth, this.options.pageHeight, [pageItemList]);
+        page.addMetadata(MetadataKey.PageNumber, thePages.length + pageIndex + 1);
+        return page;
+      });
+      thePages.push(...endNotesPages);
     }
 
 
