@@ -85,8 +85,6 @@ export interface BasicTypesetterData<ApparatusType> {
   endNoteApparatus?: ApparatusType;
 }
 
-export type BasicTypesetterExtraData<ApparatusType> = BasicTypesetterData<ApparatusType>;
-
 export interface Marginalia {
   lineNumber: number;
   marginalSubEntries: TypesetterItem[][];
