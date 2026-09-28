@@ -89,6 +89,7 @@ export interface StyleDef {
   paragraph?: ParagraphStyleDef;
   text?: TextStyleDef;
   glue?: GlueStyleDef;
+  verticalGlue?: VerticalGlueStyleDef;
 }
 
 export interface TextStyleDef {
@@ -110,6 +111,12 @@ export interface ParagraphStyleDef {
 
 export interface GlueStyleDef {
   width?: string;
+  stretch?: string;
+  shrink?: string;
+}
+
+export interface VerticalGlueStyleDef {
+  height?: string;
   stretch?: string;
   shrink?: string;
 }

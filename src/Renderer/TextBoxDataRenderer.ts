@@ -14,4 +14,8 @@ export class TextBoxDataRenderer extends TypesetterRenderer{
   renderTextBox(textBox: TextBox, x: number, y: number) {
     this.textBoxes.push({x: x + textBox.getShiftX(), y: y + textBox.getShiftY(), text: textBox.getText()})
   }
+
+  getTextBoxes(): TextBoxData[] {
+    return this.textBoxes;
+  }
 }

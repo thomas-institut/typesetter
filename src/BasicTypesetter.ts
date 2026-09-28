@@ -273,6 +273,12 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
       return outputList;
     }
 
+    const inputTextDirection = inputList.getTextDirection();
+    const lineTextDirection = inputTextDirection === 'ltr' || inputTextDirection === 'rtl'
+      ? inputTextDirection
+      : itemArray.map((item) => this.getItemIntrinsicTextDirection(item))
+        .find((textDirection) => textDirection === 'ltr' || textDirection === 'rtl') ?? '';
+
     // Determine the bidirectional text item order for the whole list; this will be the basis for
     // potentially reordering items for each line
     const bidiOrderInfoArray = BidiDisplayOrder.getDisplayOrder(itemArray, inputList.getTextDirection(), (item: TypesetterItem) => {
@@ -312,7 +318,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
     let lineNumberInParagraph = 1;
     lines = lines.map((line) => {
       // inherit text direction from input list
-      line.setTextDirection(inputList.getTextDirection());
+      line.setTextDirection(lineTextDirection);
 
       // add list type
       line.addMetadata(MetadataKey.ListType, ListType.LineList);
