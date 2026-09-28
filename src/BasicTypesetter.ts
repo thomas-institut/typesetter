@@ -29,26 +29,29 @@ import * as ListType from './ListType.js';
 import * as LineType from './LineType.js';
 import * as GlueType from './GlueType.js';
 import {FirstFitLineBreaker, ItemArrayWithBidiOrderInfo} from '@/LineBreaker';
-import {AddPageNumbers, AddPageNumbersOptions} from '@/PageProcessor';
-import {AddLineNumbers, AddLineNumbersOptions} from '@/PageProcessor';
+import {
+  AddLineNumbers,
+  AddLineNumbersOptions,
+  AddMainTextLinePositionMetadata,
+  AddMarginalia,
+  AddMarginaliaOptions,
+  AddPageNumbers,
+  AddPageNumbersOptions,
+  PageProcessor
+} from '@/PageProcessor';
 import {StringCounter} from './toolbox/StringCounter.js';
 import {trimPunctuation} from './Punctuation.js';
 import {ScriptAndTextDirectionDetector} from './toolbox/ScriptAndTextDirectionDetector';
-import {BidiDisplayOrder, IntrinsicTextDirection} from '@/Bidi';
+import {BidiDisplayOrder, BidiOrderInfo, IntrinsicTextDirection} from '@/Bidi';
 import {AdjustmentRatio} from './AdjustmentRatio.js';
 import {MinusInfinitePenalty, Penalty} from './Penalty.js';
-import {AddMainTextLinePositionMetadata} from '@/PageProcessor';
-import {AddMarginalia, AddMarginaliaOptions} from '@/PageProcessor';
 import {TypesetterItem} from "./TypesetterItem.js";
-import {PageProcessor} from "@/PageProcessor";
-import {BidiOrderInfo} from "@/Bidi";
 import {compactItemArray} from "@/Compactor";
-import {hyphenateTextBoxes} from "@/Hyphenator";
-import {HyphenationLanguage} from "@/Hyphenator";
+import {hyphenateTextBoxes, HyphenationLanguage} from "@/Hyphenator";
 import {toFixedPrecision} from "./toolbox/Util";
 
 export const BasicTypesetterSignature = 'BasicTypesetter';
-export const BasicTypesetterVersion = '1.1.1';
+export const BasicTypesetterVersion = '1.1.2';
 
 // Typesetting defaults
 
@@ -236,6 +239,8 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
     this.options.marginaliaOptions = {...AddMarginaliaDefaults, ...this.options.marginaliaOptions};
     this.addPageOutputProcessor(new AddMarginalia(this.options.marginaliaOptions));
 
+    console.log(`${BasicTypesetterSignature} ${BasicTypesetterVersion} ready`);
+
   }
 
   /**
@@ -396,6 +401,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
     // TODO: add widow/orphan control here too!
     const inputList = await super.typesetVerticalList(list);
     const outputList = new ItemList(TypesetterItemDirection.HorizontalItemDirection);
+    outputList.setTextDirection(inputList.getTextDirection());
     let currentY = 0;
     let currentVerticalList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
     if (list.hasMetadata(MetadataKey.ListType)) {
@@ -437,59 +443,6 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
       outputList.pushItem(currentVerticalList);
     }
     return outputList;
-  }
-
-  /**
-   * Typesets a vertical list of paragraphs, vertical glue and penalties.
-   *
-   * @param mainTextList the vertical list to typeset
-   * @return the typeset vertical list
-   * @private
-   */
-  private async typesetMainText(mainTextList: ItemList): Promise<ItemList> {
-    const mainTextVerticalList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
-    let paragraphNumber = 0;
-    for (const mainTextListItem of mainTextList.getList()) {
-      if (mainTextListItem instanceof Glue) {
-        if (mainTextListItem.getDirection() === TypesetterItemDirection.VerticalItemDirection) {
-          // VERTICAL GLUE, just add it to the list to typeset
-          mainTextVerticalList.pushItem(mainTextListItem);
-        } else {
-          console.warn(`${BasicTypesetterSignature}: ignoring horizontal glue while building main text vertical list`);
-        }
-        continue;
-      }
-      if (mainTextListItem instanceof ItemList) {
-        if (mainTextListItem.getDirection() === TypesetterItemDirection.HorizontalItemDirection) {
-          // HORIZONTAL LIST, i.e., a paragraph
-          paragraphNumber++;
-          const typesetParagraph = await this.typesetHorizontalList(mainTextListItem);
-          typesetParagraph.getList().forEach((typesetItem) => {
-            if (typesetItem instanceof ItemList) {
-              // add paragraph number info to each line in the paragraph
-              typesetItem.addMetadata(MetadataKey.ParagraphNumber, paragraphNumber);
-              typesetItem.addMetadata(MetadataKey.LineType, LineType.MainTextLine);
-              // Count text token occurrences within the line
-              this.addOccurrenceInLineMetadata(typesetItem);
-            }
-            mainTextVerticalList.pushItem(typesetItem);
-          });
-        }
-        continue;
-      }
-      if (mainTextListItem instanceof Penalty) {
-        mainTextVerticalList.pushItem(mainTextListItem);
-        continue;
-      }
-      // any other item type is ignored
-      console.warn(`Ignoring non-supported item while building main text vertical list`, mainTextListItem);
-    }
-    // set any inter-line glue that still not set, normally, inter-line glue between paragraphs
-    const listWithSetInterLineGlue = this.setUnsetInterLineGlue(mainTextVerticalList);
-    // add absolute line numbers metadata to text lines
-    const listWithLineNumbers = this.addAbsoluteLineNumberMetadata(listWithSetInterLineGlue);
-    listWithLineNumbers.addMetadata(MetadataKey.ListType, ListType.MainTextBlockList);
-    return listWithLineNumbers;
   }
 
   /**
@@ -713,11 +666,15 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
 
     const mainTextPageCount = thePages.length;
     if (extraData.endNoteApparatus !== undefined) {
-      const endNotesVerticalList = await this.typesetMainText(
-        await this.options.getEndNotesVerticalListToTypeset(extraData.endNoteApparatus, thePages)
-      );
-      const endNotesPageList = await this.typesetVerticalList(endNotesVerticalList);
-      const endNotesPages = endNotesPageList.getList().map((pageItemList, pageIndex) => {
+      const endNotesVerticalListToTypeset = await this.options.getEndNotesVerticalListToTypeset(extraData.endNoteApparatus, thePages);
+      console.log('endNotesVerticalListToTypeset', endNotesVerticalListToTypeset);
+      const endNotesVerticalList = await this.typesetMainText(endNotesVerticalListToTypeset);
+      console.log(`Endnotes typeset as main text`, endNotesVerticalList);
+      const endNotesList = await this.typesetVerticalList(endNotesVerticalList);
+
+      console.log(`Endnotes typeset list`, endNotesList);
+
+      const endNotesPages = endNotesList.getList().map((pageItemList, pageIndex) => {
         pageItemList
           .setShiftX(this.options.marginLeft)
           .setShiftY(this.options.marginTop)
@@ -888,6 +845,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
    */
   addAbsoluteLineNumberMetadata(verticalList: ItemList): ItemList {
     const outputList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
+    outputList.setTextDirection(verticalList.getTextDirection());
     let lineNumber = 0;
     verticalList.getList().forEach((item) => {
       if (item instanceof ItemList && item.hasMetadata(MetadataKey.ListType) && item.getMetadata(MetadataKey.ListType) === ListType.LineList) {
@@ -901,6 +859,60 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
   }
 
   /**
+   * Typesets a vertical list of paragraphs, vertical glue and penalties.
+   *
+   * @param mainTextList the vertical list to typeset
+   * @return the typeset vertical list
+   * @private
+   */
+  private async typesetMainText(mainTextList: ItemList): Promise<ItemList> {
+    const mainTextVerticalList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
+    mainTextVerticalList.setTextDirection(mainTextList.getTextDirection());
+    let paragraphNumber = 0;
+    for (const mainTextListItem of mainTextList.getList()) {
+      if (mainTextListItem instanceof Glue) {
+        if (mainTextListItem.getDirection() === TypesetterItemDirection.VerticalItemDirection) {
+          // VERTICAL GLUE, just add it to the list to typeset
+          mainTextVerticalList.pushItem(mainTextListItem);
+        } else {
+          console.warn(`${BasicTypesetterSignature}: ignoring horizontal glue while building main text vertical list`);
+        }
+        continue;
+      }
+      if (mainTextListItem instanceof ItemList) {
+        if (mainTextListItem.getDirection() === TypesetterItemDirection.HorizontalItemDirection) {
+          // HORIZONTAL LIST, i.e., a paragraph
+          paragraphNumber++;
+          const typesetParagraph = await this.typesetHorizontalList(mainTextListItem);
+          typesetParagraph.getList().forEach((typesetItem) => {
+            if (typesetItem instanceof ItemList) {
+              // add paragraph number info to each line in the paragraph
+              typesetItem.addMetadata(MetadataKey.ParagraphNumber, paragraphNumber);
+              typesetItem.addMetadata(MetadataKey.LineType, LineType.MainTextLine);
+              // Count text token occurrences within the line
+              this.addOccurrenceInLineMetadata(typesetItem);
+            }
+            mainTextVerticalList.pushItem(typesetItem);
+          });
+        }
+        continue;
+      }
+      if (mainTextListItem instanceof Penalty) {
+        mainTextVerticalList.pushItem(mainTextListItem);
+        continue;
+      }
+      // any other item type is ignored
+      console.warn(`Ignoring non-supported item while building main text vertical list`, mainTextListItem);
+    }
+    // set any inter-line glue that still not set, normally, inter-line glue between paragraphs
+    const listWithSetInterLineGlue = this.setUnsetInterLineGlue(mainTextVerticalList);
+    // add absolute line numbers metadata to text lines
+    const listWithLineNumbers = this.addAbsoluteLineNumberMetadata(listWithSetInterLineGlue);
+    listWithLineNumbers.addMetadata(MetadataKey.ListType, ListType.MainTextBlockList);
+    return listWithLineNumbers;
+  }
+
+  /**
    * Sets any unset inter-line glue in the vertical list.
    * Normally, this will be the inter-line glue at the end of individually
    * set paragraphs.
@@ -910,6 +922,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
    */
   private setUnsetInterLineGlue(verticalList: ItemList): ItemList {
     const outputList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
+    outputList.setTextDirection(verticalList.getTextDirection());
     let state = 0;
     let currentInterLineGlue: TypesetterItem | null = null;
     let tmpItems: TypesetterItem[] = [];
