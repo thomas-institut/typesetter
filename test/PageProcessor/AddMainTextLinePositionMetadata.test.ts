@@ -48,10 +48,13 @@ describe('AddMainTextLinePositionMetadata', () => {
     await processor.process(page);
 
     const metadata = page.getMetadata(MetadataKey.MDK_MainTextLineData);
+    // @ts-expect-error metadata may not be defined
     expect(metadata.mainTextListIndex).toBe(0);
+    // @ts-expect-error metadata may not be defined
     expect(metadata.lineData).toHaveLength(2);
 
     // Line 1: index 0, y = 0
+    // @ts-expect-error metadata may not be defined
     expect(metadata.lineData[0]).toEqual({
       listIndex: 0,
       lineNumber: 1,
@@ -59,6 +62,7 @@ describe('AddMainTextLinePositionMetadata', () => {
     });
 
     // Line 2: index 2 (after line1 and glue), y = 15 + 5 = 20
+    // @ts-expect-error metadata may not be defined
     expect(metadata.lineData[1]).toEqual({
       listIndex: 2,
       lineNumber: 2,
@@ -81,7 +85,9 @@ describe('AddMainTextLinePositionMetadata', () => {
     await processor.process(page);
 
     const metadata = page.getMetadata(MetadataKey.MDK_MainTextLineData);
+    // @ts-expect-error metadata may not be defined
     expect(metadata.mainTextListIndex).toBe(0);
+    // @ts-expect-error metadata may not be defined
     expect(metadata.lineData[0].lineNumber).toBe(1);
   });
 
@@ -99,7 +105,9 @@ describe('AddMainTextLinePositionMetadata', () => {
     await processor.process(page);
 
     const metadata = page.getMetadata(MetadataKey.MDK_MainTextLineData);
+    // @ts-expect-error metadata may not be defined
     expect(metadata.lineData).toHaveLength(1);
+    // @ts-expect-error metadata may not be defined
     expect(metadata.lineData[0].lineNumber).toBe(1);
   });
 
@@ -118,7 +126,9 @@ describe('AddMainTextLinePositionMetadata', () => {
     await processor.process(page);
 
     const metadata = page.getMetadata(MetadataKey.MDK_MainTextLineData);
+    // @ts-expect-error metadata may not be defined
     expect(metadata.lineData).toHaveLength(1);
+    // @ts-expect-error metadata may not be defined
     expect(metadata.lineData[0].lineNumber).toBe(1);
   });
 
@@ -136,8 +146,11 @@ describe('AddMainTextLinePositionMetadata', () => {
     await processor.process(page);
 
     const metadata = page.getMetadata(MetadataKey.MDK_MainTextLineData);
+    // @ts-expect-error metadata may not be defined
     expect(metadata.lineData).toHaveLength(2);
+    // @ts-expect-error metadata may not be defined
     expect(metadata.lineData[1].lineNumber).toBe(2);
+    // @ts-expect-error metadata may not be defined
     expect(metadata.lineData[1].y).toBe(20); // 10 (line1) + 10 (otherList)
   });
 });

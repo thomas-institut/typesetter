@@ -51,7 +51,7 @@ import {hyphenateTextBoxes, HyphenationLanguage} from "@/Hyphenator";
 import {toFixedPrecision} from "./toolbox/Util";
 
 export const BasicTypesetterSignature = 'BasicTypesetter';
-export const BasicTypesetterVersion = '1.1.2';
+export const BasicTypesetterVersion = '1.2';
 
 // Typesetting defaults
 
@@ -239,7 +239,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
     this.options.marginaliaOptions = {...AddMarginaliaDefaults, ...this.options.marginaliaOptions};
     this.addPageOutputProcessor(new AddMarginalia(this.options.marginaliaOptions));
 
-    console.log(`${BasicTypesetterSignature} ${BasicTypesetterVersion} ready`);
+    this.debug && console.log(`${BasicTypesetterSignature} ${BasicTypesetterVersion} ready`);
 
   }
 
@@ -421,8 +421,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
       }
       if (item instanceof ItemList) {
         if (item.getDirection() === TypesetterItemDirection.VerticalItemDirection) {
-          console.warn(`Ignoring vertical list while typesetting a vertical list, item index ${i}`);
-          console.log(item);
+          console.warn(`Ignoring vertical list while typesetting a vertical list, item index ${i}`, item);
           return;
         }
         currentY += item.getHeight();
@@ -441,8 +440,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
         }
         return;
       }
-      console.warn(`Ignoring non-glue non-list item while typesetting vertical list, item index ${i}`);
-      console.log(item);
+      console.warn(`Ignoring non-glue non-list item while typesetting vertical list, item index ${i}`, item);
     });
     if (currentVerticalList.getList().length !== 0) {
       currentVerticalList.trimEndGlue();
@@ -673,13 +671,8 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
     const mainTextPageCount = thePages.length;
     if (extraData.endNoteApparatus !== undefined) {
       const endNotesVerticalListToTypeset = await this.options.getEndNotesVerticalListToTypeset(extraData.endNoteApparatus, thePages);
-      console.log('endNotesVerticalListToTypeset', endNotesVerticalListToTypeset);
       const endNotesVerticalList = await this.typesetMainText(endNotesVerticalListToTypeset);
-      console.log(`Endnotes typeset as main text`, endNotesVerticalList);
       const endNotesList = await this.typesetVerticalList(endNotesVerticalList);
-
-      console.log(`Endnotes typeset list`, endNotesList);
-
       const endNotesPages = endNotesList.getList().map((pageItemList, pageIndex) => {
         pageItemList
           .setShiftX(this.options.marginLeft)
@@ -700,7 +693,6 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
         ? this.pageOutputProcessors
         : this.pageNumberProcessor === null ? [] : [this.pageNumberProcessor];
       for (let processorIndex = 0; processorIndex < pageProcessors.length; processorIndex++) {
-        // this.debug && console.log(`Applying page output processor ${processorIndex}`)
         processedPage = await pageProcessors[processorIndex].process(processedPage);
       }
       processedPages.push(processedPage);
@@ -719,7 +711,6 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
    *
    */
   ejectPage(verticalList: ItemList, pageNumber: number, firstLine: number, lastLine: number): TypesetterPage[] {
-    // this.debug && console.log(`Ejecting page ${pageNumber}: lines ${firstLine} to ${lastLine}`);
     verticalList
       .setShiftX(this.options.marginLeft)
       .setShiftY(this.options.marginTop)
@@ -1088,7 +1079,6 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
         itemsInRange.push(item);
       }
     }
-
 
     return {
       items: itemsInRange, widows: widows, orphans: orphans, penalty: penalty
