@@ -7,6 +7,7 @@ import {ObjectFactory} from "@/ObjectFactory";
 import {TypesetterItem} from "@/TypesetterItem";
 import {createItemArrayFromString} from "@/ItemArrayFromString";
 import {ItemArrayWithBidiOrderInfo} from "@/LineBreaker/FirstFitLineBreaker";
+import {BidiOrderInfo} from "@/Bidi/BidiOrderInfo";
 
 interface CompactTestCaseData {
   testStrings: string[];
@@ -14,6 +15,41 @@ interface CompactTestCaseData {
 }
 
 describe('Compact Item Array', () => {
+  it('should compact a large unmergeable level run', () => {
+    const itemCount = 150_000;
+    const itemArray = Array.from({length: itemCount}, (_, index) =>
+      new TextBox()
+        .setText(String(index))
+        .setFontFamily(index % 2 === 0 ? 'FontA' : 'FontB'));
+    const bidiOrderInfoArray = createBidiOrderInfoArray(itemCount);
+
+    const compacted = compactItemArray({itemArray, bidiOrderInfoArray});
+
+    expect(compacted.itemArray).toHaveLength(itemCount);
+    expect(compacted.itemArray.every((item, index) => item === itemArray[index])).toBe(true);
+    expect(compacted.bidiOrderInfoArray.every((info, index) =>
+      info.inputIndex === index && info.displayOrder === index)).toBe(true);
+  });
+
+  it.each(['left', 'right'] as const)('should append a large source metadata array from the %s item', (sourceSide) => {
+    const sourceItems = Array.from({length: 150_000}, (_, index) => ({index}));
+    const leftItem = new TextBox().setText('left');
+    const rightItem = new TextBox().setText('right');
+    (sourceSide === 'left' ? leftItem : rightItem).addMetadata(SourceItems, sourceItems);
+    const itemArray = [leftItem, rightItem];
+    const bidiOrderInfoArray = createBidiOrderInfoArray(itemArray.length);
+
+    const compacted = compactItemArray({itemArray, bidiOrderInfoArray});
+    const mergedSourceItems = compacted.itemArray[0].getMetadata(SourceItems) as object[];
+
+    expect(compacted.itemArray).toHaveLength(1);
+    expect(mergedSourceItems).toHaveLength(sourceItems.length + 1);
+    expect(sourceItems).toHaveLength(150_000);
+    const sourceOffset = sourceSide === 'left' ? 0 : 1;
+    expect(sourceItems.every((sourceItem, index) =>
+      mergedSourceItems[index + sourceOffset] === sourceItem)).toBe(true);
+  });
+
   it('should compact text', () => {
     const TestCases: CompactTestCaseData[] = [
       {testStrings: ['A simple string', '.', '.'], expectedTextBoxes: ['A', 'simple', 'string..']},
@@ -70,3 +106,13 @@ describe('Compact Item Array', () => {
     })
   })
 });
+
+function createBidiOrderInfoArray(itemCount: number): BidiOrderInfo[] {
+  return Array.from({length: itemCount}, (_, index) => ({
+    inputIndex: index,
+    displayOrder: index,
+    intrinsicTextDirection: 'ltr',
+    textDirection: 'ltr',
+    embeddingLevel: 0,
+  }));
+}

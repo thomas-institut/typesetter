@@ -155,7 +155,9 @@ export class BidiDisplayOrder {
     // build return array
     let returnArray: BidiOrderInfo[] = [];
     levelRuns.forEach((levelRun) => {
-      returnArray.push(...levelRun);
+      for (const itemInfo of levelRun) {
+        returnArray.push(itemInfo);
+      }
     });
     returnArray = returnArray.map((itemInfo, index) => {
       itemInfo.displayOrder = index;

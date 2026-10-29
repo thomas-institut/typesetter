@@ -564,7 +564,9 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
           this.debug && console.log(`EJECTING Page ${currentPage.pageNumber} due to forced page break`);
           this.debug && console.log(`===================`);
           const ejectedPages = this.ejectPage(verticalListToTest, currentPage.pageNumber, currentPage.firstLine, currentLine);
-          thePages.push(...ejectedPages);
+          for (const ejectedPage of ejectedPages) {
+            thePages.push(ejectedPage);
+          }
           pageTypesettingData.push({
             firstLine: currentPage.firstLine,
             lastLine: currentLine,
@@ -605,7 +607,9 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
               this.debug && console.log(`EJECTING Page ${currentPage.pageNumber}`);
               this.debug && console.log(`===================`);
               const ejectedPages = this.ejectPage(bestPage.list, currentPage.pageNumber, bestPage.firstLine, bestPage.lastLine);
-              thePages.push(...ejectedPages);
+              for (const ejectedPage of ejectedPages) {
+                thePages.push(ejectedPage);
+              }
               pageTypesettingData.push({
                 firstLine: bestPage.firstLine,
                 lastLine: bestPage.lastLine,
@@ -642,7 +646,9 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
         this.debug && console.log(`EJECTING page ${currentPage.pageNumber}, lines ${currentPage.firstLine} to ${bestPage.lastLine}`);
         this.debug && console.log(`===================`);
         const ejectedPages = this.ejectPage(bestPage.list, currentPage.pageNumber, currentPage.firstLine, bestPage.lastLine);
-        thePages.push(...ejectedPages);
+        for (const ejectedPage of ejectedPages) {
+          thePages.push(ejectedPage);
+        }
         pageTypesettingData.push({
           firstLine: bestPage.firstLine,
           lastLine: bestPage.lastLine,
@@ -657,7 +663,10 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
         const verticalListWithLastHangingLines = await this.prepareVerticalListToTest(mainTextVerticalList, lineRangeData.items, extraData.apparatuses, bestPage.lastLine + 1, lastLine, resetLineNumbersEachPage);
         this.debug && console.log(`EJECTING page ${currentPage.pageNumber}, hanging lines ${bestPage.lastLine + 1} to ${lastLine}`);
         this.debug && console.log(`===================`);
-        thePages.push(...this.ejectPage(verticalListWithLastHangingLines, currentPage.pageNumber, bestPage.lastLine + 1, lastLine));
+        const ejectedPages = this.ejectPage(verticalListWithLastHangingLines, currentPage.pageNumber, bestPage.lastLine + 1, lastLine);
+        for (const ejectedPage of ejectedPages) {
+          thePages.push(ejectedPage);
+        }
         pageTypesettingData.push({
           firstLine: bestPage.lastLine + 1, lastLine: lastLine, badness: -1, linesLookedAhead: 0
         });
@@ -746,7 +755,10 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
               currentHeight += glueItem.getHeight();
             });
             currentHeight += item.getHeight();
-            itemList.push(...accGlue, item);
+            for (const glueItem of accGlue) {
+              itemList.push(glueItem);
+            }
+            itemList.push(item);
             accGlue = [];
           }
         }

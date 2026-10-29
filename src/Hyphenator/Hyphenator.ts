@@ -204,9 +204,14 @@ export function hyphenate(inputWord: string, lang: HyphenationLanguage, manualEn
     //   – pre  weights of position i+1
     const pw: number[] = [...weights[i].post];
     if (i + 1 < len) {
-      pw.push(...weights[i + 1].pre);
+      for (const weight of weights[i + 1].pre) {
+        pw.push(weight);
+      }
     }
-    const maxWeight = pw.length === 0 ? 0 : Math.max(...pw);
+    let maxWeight = 0;
+    for (const weight of pw) {
+      maxWeight = Math.max(maxWeight, weight);
+    }
 
     if (maxWeight % 2 === 1) {
       // i is an index in the *wrapped* string; the original word starts at index 1

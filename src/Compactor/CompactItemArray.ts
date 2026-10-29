@@ -44,7 +44,10 @@ export function compactItemArray(itemArrayWithBidiOrderInfo: ItemArrayWithBidiOr
     }
     const compactedLevelRun = compactLevelItemArray(levelItemArray);
     debug && console.log(`Original level run has ${levelItemArray.length} items, compacted has ${compactedLevelRun.length}`);
-    newItemArray.push(...compactedLevelRun);
+    // Append iteratively to avoid exceeding the argument limit for large runs.
+    for (const item of compactedLevelRun) {
+      newItemArray.push(item);
+    }
     const newLevelStartIndex = lastIndex + 1;
     const newLevelEndIndex = lastIndex + compactedLevelRun.length;
 
@@ -143,13 +146,17 @@ function mergeItemWithNext(item: TypesetterItem, nextItem: TypesetterItem): Type
     const sourceItems: object[] = [];
     if (item.getMetadata(MetadataKey.SourceItems) !== undefined) {
       const itemSourceItems = item.getMetadata(MetadataKey.SourceItems) as object[];
-      sourceItems.push(...itemSourceItems);
+      for (const sourceItem of itemSourceItems) {
+        sourceItems.push(sourceItem);
+      }
     } else {
       sourceItems.push(item.getExportObject());
     }
     if (nextItem.getMetadata(MetadataKey.SourceItems) !== undefined) {
       const nextItemSourceItems = nextItem.getMetadata(MetadataKey.SourceItems) as object[];
-      sourceItems.push(...nextItemSourceItems);
+      for (const sourceItem of nextItemSourceItems) {
+        sourceItems.push(sourceItem);
+      }
     } else {
       sourceItems.push(nextItem.getExportObject());
     }

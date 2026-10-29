@@ -29,7 +29,9 @@ export function deepGetValuesForKey(someVariable: any, key: string): any[] {
   if (Array.isArray(someVariable)) {
     const values: any[] = [];
     someVariable.forEach((element) => {
-      values.push(...deepGetValuesForKey(element, key));
+      for (const value of deepGetValuesForKey(element, key)) {
+        values.push(value);
+      }
     });
     return values;
   }
@@ -40,7 +42,9 @@ export function deepGetValuesForKey(someVariable: any, key: string): any[] {
       values.push(someVariable[key]);
     } else {
       // for any other object element, add up all found values inside the element
-      values.push(...deepGetValuesForKey(someVariable[objectKey], key));
+      for (const value of deepGetValuesForKey(someVariable[objectKey], key)) {
+        values.push(value);
+      }
     }
   });
   return values;
