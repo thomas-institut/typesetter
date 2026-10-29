@@ -120,7 +120,9 @@ export class AddMarginalia extends PageProcessor {
 
       let marginalItemArray: TypesetterItem[] = [];
       for (let j = 0; j < pageMarginalia[i].marginalSubEntries.length; j++) {
-        marginalItemArray.push(...pageMarginalia[i].marginalSubEntries[j]);
+        for (const item of pageMarginalia[i].marginalSubEntries[j]) {
+          marginalItemArray.push(item);
+        }
         if (j !== pageMarginalia[i].marginalSubEntries.length - 1) {
           const interMarginGlue = new Glue();
           // TODO: make this glue size an option

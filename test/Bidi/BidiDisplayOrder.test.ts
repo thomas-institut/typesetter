@@ -12,6 +12,17 @@ interface TestCase {
   expectedDirections: ("ltr" | "rtl")[]
 }
 describe('Bidi Display Order', () => {
+  test('handles a large unidirectional run', () => {
+    const itemCount = 150_000;
+    const items = Array.from({length: itemCount}, () => 'ltr');
+    const result = BidiDisplayOrder.getDisplayOrder(items, 'ltr', getFakeStringTextDirection);
+
+    expect(result).toHaveLength(itemCount);
+    expect(result[0].inputIndex).toBe(0);
+    expect(result[itemCount - 1].inputIndex).toBe(itemCount - 1);
+    expect(result[itemCount - 1].displayOrder).toBe(itemCount - 1);
+  });
+
   test('Unidirectional Strings', () => {
     const testCases: TestCase[] = [
       {
