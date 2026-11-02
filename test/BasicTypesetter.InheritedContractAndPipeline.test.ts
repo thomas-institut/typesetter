@@ -7,7 +7,7 @@ import {TextBoxMeasurer} from "@/TextBoxMeasurer/TextBoxMeasurer";
 import {TypesetterItem} from "@/TypesetterItem";
 import {TypesetterPage} from "@/TypesetterPage";
 import {Glue} from "@/Glue";
-import {Penalty} from "@/Penalty";
+import {MinusInfinitePenalty, Penalty} from "@/Penalty";
 import {TextBoxFactory} from "@/TextBoxFactory";
 import {TextBox} from "@/TextBox";
 import * as MetadataKey from "@/MetadataKey";
@@ -392,6 +392,58 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
       });
     });
     expect(pageHasMainTextAndApparatus).toBe(true);
+  });
+
+  it.each([
+    {hasApparatuses: false, label: 'without apparatuses'},
+    {hasApparatuses: true, label: 'with apparatuses'},
+  ])('forces a page break between complete multi-line paragraphs $label', async ({hasApparatuses}) => {
+    const paragraphTexts = [
+      'alphaOne alphaTwo alphaThree alphaFour',
+      'bravoOne bravoTwo bravoThree bravoFour',
+    ];
+    const makeMultiLineParagraph = (text: string): ItemList => {
+      const paragraph = new ItemList(HorizontalItemDirection);
+      text.split(' ').forEach((word, index) => {
+        if (index === 2) {
+          paragraph.pushItem(Penalty.createForcedBreakPenalty());
+        } else if (index !== 0) {
+          paragraph.pushItem(new Glue(HorizontalItemDirection).setWidth(12).setStretch(200).setShrink(6));
+        }
+        paragraph.pushItem(TextBoxFactory.simpleText(word));
+      });
+      return paragraph;
+    };
+    const typesetter = makeTypesetter({
+      pageWidth: 400,
+      pageHeight: 150,
+      lineSkip: 24,
+      getApparatusListToTypeset: async () => {
+        const apparatusList = new ItemList(HorizontalItemDirection);
+        apparatusList.pushItemArray(createItemArrayFromString('apparatus note'));
+        return apparatusList;
+      },
+    });
+    const mainTextList = new ItemList(VerticalItemDirection);
+    mainTextList.pushItem(makeMultiLineParagraph(paragraphTexts[0]));
+    mainTextList.pushItem(new Penalty().setPenalty(MinusInfinitePenalty));
+    mainTextList.pushItem(makeMultiLineParagraph(paragraphTexts[1]));
+
+    const doc = await typesetter.typeset(mainTextList, hasApparatuses ? {apparatuses: [{id: 'note'}]} : {});
+
+    expect(doc.getPageCount()).toBe(2);
+    const pages = doc.getPages().map((page) => {
+      const mainTextBlock = getMainTextBlock(page.getItems());
+      const lines = getLineItems(mainTextBlock);
+      return {
+        text: getTextFromItems(lines),
+        lines,
+      };
+    });
+    expect(pages.map((page) => page.text)).toEqual(paragraphTexts.map((text) => text.replaceAll(' ', '')));
+    pages.forEach((page) => {
+      expect(page.lines.length).toBeGreaterThan(1);
+    });
   });
 
   it('C6: preTypesetApparatuses hook is called once with apparatus list', async () => {
