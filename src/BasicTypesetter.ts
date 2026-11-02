@@ -440,6 +440,18 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
         }
         return;
       }
+      if (item instanceof Penalty && item.getPenalty() === MinusInfinitePenalty) {
+        currentVerticalList.trimEndGlue();
+        if (currentVerticalList.getList().length !== 0) {
+          outputList.pushItem(currentVerticalList);
+        }
+        currentVerticalList = new ItemList(TypesetterItemDirection.VerticalItemDirection);
+        if (list.hasMetadata(MetadataKey.ListType)) {
+          currentVerticalList.addMetadata(MetadataKey.ListType, list.getMetadata(MetadataKey.ListType));
+        }
+        currentY = 0;
+        return;
+      }
       console.warn(`Ignoring non-glue non-list item while typesetting vertical list, item index ${i}`, item);
     });
     if (currentVerticalList.getList().length !== 0) {
@@ -575,7 +587,7 @@ export class BasicTypesetter<ApparatusType> extends Typesetter {
           });
           // update current page
           currentPage.pageNumber += ejectedPages.length;
-          currentPage.firstLine = currentLine;
+          currentPage.firstLine = currentLine + 1;
           // reset best page
           bestPage = {
             firstLine: currentLine + 1, lastLine: currentLine, badness: InfiniteVerticalBadness, list: null

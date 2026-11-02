@@ -251,6 +251,9 @@ export class FirstFitLineBreaker extends LineBreaker {
         newLine.pushItem(itemArray[i]);
       }
       const breakItem = itemArray[breakIndex];
+      if (breakItem instanceof Box) {
+        newLine.pushItem(breakItem);
+      }
       if (breakItem instanceof Penalty) {
         const itemToInsert = breakItem.getItemToInsert();
         if (itemToInsert !== null) {
