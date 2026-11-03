@@ -398,25 +398,25 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
     {hasApparatuses: false, label: 'without apparatuses'},
     {hasApparatuses: true, label: 'with apparatuses'},
   ])('forces a page break between complete multi-line paragraphs $label', async ({hasApparatuses}) => {
-    const paragraphTexts = [
-      'alphaOne alphaTwo alphaThree alphaFour',
-      'bravoOne bravoTwo bravoThree bravoFour',
-    ];
-    const makeMultiLineParagraph = (text: string): ItemList => {
+    const makeHundredWordParagraph = (prefix: string): string => {
+      return Array.from({length: 100}, (_value, index) => `${prefix}${index + 1}`).join(' ');
+    };
+    const paragraphTexts = [makeHundredWordParagraph('alpha'), makeHundredWordParagraph('bravo')];
+    const makeLineBreakableParagraph = (text: string): ItemList => {
       const paragraph = new ItemList(HorizontalItemDirection);
       text.split(' ').forEach((word, index) => {
-        if (index === 2) {
-          paragraph.pushItem(Penalty.createForcedBreakPenalty());
-        } else if (index !== 0) {
+        if (index !== 0) {
           paragraph.pushItem(new Glue(HorizontalItemDirection).setWidth(12).setStretch(200).setShrink(6));
         }
         paragraph.pushItem(TextBoxFactory.simpleText(word));
       });
+      paragraph.pushItem(new Glue(HorizontalItemDirection).setWidth(0).setStretch(100000));
+      paragraph.pushItem(new Penalty().setPenalty(MinusInfinitePenalty));
       return paragraph;
     };
     const typesetter = makeTypesetter({
       pageWidth: 400,
-      pageHeight: 150,
+      pageHeight: 1200,
       lineSkip: 24,
       getApparatusListToTypeset: async () => {
         const apparatusList = new ItemList(HorizontalItemDirection);
@@ -425,9 +425,9 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
       },
     });
     const mainTextList = new ItemList(VerticalItemDirection);
-    mainTextList.pushItem(makeMultiLineParagraph(paragraphTexts[0]));
+    mainTextList.pushItem(makeLineBreakableParagraph(paragraphTexts[0]));
     mainTextList.pushItem(new Penalty().setPenalty(MinusInfinitePenalty));
-    mainTextList.pushItem(makeMultiLineParagraph(paragraphTexts[1]));
+    mainTextList.pushItem(makeLineBreakableParagraph(paragraphTexts[1]));
 
     const doc = await typesetter.typeset(mainTextList, hasApparatuses ? {apparatuses: [{id: 'note'}]} : {});
 
@@ -442,7 +442,7 @@ describe('BasicTypesetter inherited contract and pipeline', () => {
     });
     expect(pages.map((page) => page.text)).toEqual(paragraphTexts.map((text) => text.replaceAll(' ', '')));
     pages.forEach((page) => {
-      expect(page.lines.length).toBeGreaterThan(1);
+      expect(page.lines.length).toBeGreaterThan(2);
     });
   });
 
